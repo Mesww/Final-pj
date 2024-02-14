@@ -27,7 +27,6 @@ export async function mongoDBConnection() {
     try {
       const client = await MongoClient.connect(url, {});
       console.log("DB Connected!");
-  
       const database = client.db("PjDatabase"); // Specify your database name
       const collection = database.collection("todos");
   
