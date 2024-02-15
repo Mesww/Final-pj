@@ -27,52 +27,55 @@ router.post("/add", async (req: Request, res: Response) => {
 
 //Get request
 
-router.get("/",async (req:Request, res: Response)=> {
-  try{
+router.get("/", async (req: Request, res: Response) => {
+  try {
     const dataItem = await Todo.find({});
-    
+
     res.status(200).json({
       data: dataItem,
     });
 
-  } catch (err){
+  } catch (err) {
     console.log("Error something" + err)
   }
 });
 
 
 //Delete Request
-router.delete("/delete",async (req:Request, res: Response)=> {
+router.delete("/delete", async (req: Request, res: Response) => {
 
-    const filter = {
-      title: req.body.title,
-    }
-    const dataItem = await Todo.deleteOne(filter).then((data) => res.json({
-      data : data
-    })
-    ).catch((error) => {
-      return res.send(error);
-    });
+  const filter = {
+    _id: req.body._id,
+  }
+  const dataItem = await Todo.deleteOne(filter).then((data) => res.json({
+    data: data
+  })
+  ).catch((error) => {
+    return res.send(error);
+  });
 
- 
+
 });
 
 
 //Update Request
-router.put("/update",async (req:Request, res: Response)=> {
+router.put("/update", async (req: Request, res: Response) => {
 
   const filter = {
-    title: req.body.title,
+    _id: req.body._id,
   }
 
   const updatedData = {
-    $set:{description: req.body.description} 
+    $set: {
+      title: req.body.title
+      , description: req.body.description
+    }
   };
 
-  const dataItem = await Todo.updateOne(filter,updatedData,{
+  const dataItem = await Todo.updateOne(filter, updatedData, {
     new: true
   }).then((data) => res.json({
-    data : data
+    data: data
   })
   ).catch((error) => {
     return res.send(error);
