@@ -63,7 +63,7 @@ class _HomepageState extends State<Homepage> {
                             model.deleteData(model.usersData[index]['_id']);
                           },
                           icon: Icon(Icons.delete)),
-                      onLongPress: () {
+                      onTap: () {
                         updateDataWidget(
                             context, model.usersData[index]['_id']);
                       },
