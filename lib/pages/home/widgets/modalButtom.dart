@@ -48,11 +48,11 @@ updateDataWidget(BuildContext context, String _id) {
           child: Column(children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(hintText: "Add name"),
+              decoration: InputDecoration(hintText: "Update name"),
             ),
             TextField(
               controller: desController,
-              decoration: InputDecoration(hintText: "Add descripttion"),
+              decoration: InputDecoration(hintText: "Update description"),
             ),
             ElevatedButton(
                 onPressed: () {
