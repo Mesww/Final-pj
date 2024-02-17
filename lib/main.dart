@@ -1,10 +1,10 @@
+import 'package:final_pj/pages/map/view/mappage.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
-import 'pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
-import 'package:final_pj/pages/home/view/homepage.dart';
+
 void main() {
   runApp(MultiProvider(
     providers: [
@@ -27,7 +27,8 @@ class MyApp extends StatelessWidget {
         primaryColorDark: Palette.bluegray,
         useMaterial3: true,
       ),
-      home: const Mappage(),
+      home: Mappage(),
     );
 }
 }
+
