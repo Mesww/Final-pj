@@ -1,36 +1,36 @@
+import 'package:final_pj/provider/busline_provider.dart';
 import 'package:flutter/material.dart';
 // import 'package:radial_button/widget/circle_floating_button.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 import 'fab_circular_menu.dart';
 
-class Buslinebutton extends StatefulWidget {
+class Buslinebutton extends StatelessWidget {
   const Buslinebutton({Key? key}) : super(key: key);
 
-  @override
-  _BuslinebuttonState createState() => _BuslinebuttonState();
-}
-
-class _BuslinebuttonState extends State<Buslinebutton> {
-  int Counter = 0;
-  String IsOpened = "No";
-  String BtnText = "OpenMenu";
-  final GlobalKey<FabCircularMenuState> fabKey = GlobalKey();
+  // String IsOpened = "No";
+  // String BtnText = "OpenMenu";
+  // final GlobalKey<FabCircularMenuState> fabKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
+    var busline_provider_get = context.watch<Busline_provider>();
+    var busline_provider_set = context.read<Busline_provider>();
     var itemsActionBar = [
       FloatingActionButton(
+        shape: CircleBorder(),
         onPressed: () {},
         backgroundColor: Colors.red,
         child: Icon(MdiIcons.numeric1),
       ),
       FloatingActionButton(
+        shape: CircleBorder(),
         onPressed: () {},
         backgroundColor: Colors.green,
         child: Icon(MdiIcons.numeric2),
       ),
     ];
     return FabCircularMenu(
-        key: fabKey,
+        key: busline_provider_get.get_fabKey(),
         alignment: Alignment.bottomCenter,
         ringColor: Colors.white,
         ringDiameter: 200,
@@ -45,15 +45,17 @@ class _BuslinebuttonState extends State<Buslinebutton> {
         animationCurve: Curves.easeInOutCirc,
         onDisplayChange: (isOpen) {
           if (isOpen) {
-            setState(() {
-              IsOpened = "Yes";
-            });
+            busline_provider_set.set_IsOpend("Yes");
+            // setState(() {
+            //   IsOpened = "Yes";
+            // });
           } else {
-            setState(() {
-              IsOpened = "No";
-            });
+            busline_provider_set.set_IsOpend("Yes");
+            // setState(() {
+            //   IsOpened = "No";
+            // });
           }
         },
-        children: itemsActionBar );
+        children: itemsActionBar);
   }
 }
