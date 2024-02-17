@@ -1,13 +1,17 @@
-import 'dart:async';
-
+import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:location/location.dart';
-
-// import 'pages/home/home.dart';
-
-Future<void> main() async {
-  runApp(const MyApp());
+import 'package:final_pj/config/pallete.dart';
+import 'pages/map/map.dart';
+import 'package:final_pj/provider/provider.dart';
+import 'package:provider/provider.dart';
+import 'package:final_pj/pages/home/view/homepage.dart';
+void main() {
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (context)=>Busline_provider()),
+      ChangeNotifierProvider(create: (_) => usersProvider()),
+    ],
+    child: const MyApp()));
 }
 
 // Future<void> getLocation() async {
@@ -16,20 +20,21 @@ Future<void> main() async {
 // }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+ const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primaryColor: Palette.redwood,
+        primaryColorLight: Palette.vermilion,
+        primaryColorDark: Palette.bluegray,
         useMaterial3: true,
       ),
-      home: const MapSample(),
+      home: const Mappage(),
     );
-  }
+}
 }
 
 class MapSample extends StatefulWidget {
