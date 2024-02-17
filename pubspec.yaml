@@ -41,6 +41,7 @@ dependencies:
   fab_circular_menu: ^1.0.2
   material_design_icons_flutter: ^7.0.7296
   radial_button: ^1.0.1
+  material_floating_search_bar_2: ^0.5.0
 
 dev_dependencies:
   flutter_test:
