@@ -5,11 +5,11 @@ import 'package:provider/provider.dart';
 import 'pages/home/home.dart';
 
 Future<void> main() async {
-  runApp( MyApp());
+  runApp( const MyApp());
 }
 
 class MyApp extends StatelessWidget {
- MyApp({super.key});
+ const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: Homepage(),
+        home: const Homepage(),
       ),
     );
   }
