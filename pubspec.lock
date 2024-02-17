@@ -65,6 +65,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.18.0"
+<<<<<<< HEAD
   convert:
     dependency: transitive
     description:
@@ -81,6 +82,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -131,6 +134,7 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+<<<<<<< HEAD
   http:
     dependency: "direct main"
     description:
@@ -163,6 +167,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.8.1"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   lints:
     dependency: transitive
     description:
@@ -203,6 +209,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
+<<<<<<< HEAD
   mongo_dart:
     dependency: "direct main"
     description:
@@ -219,6 +226,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   nested:
     dependency: transitive
     description:
@@ -320,6 +329,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
+<<<<<<< HEAD
   sprintf:
     dependency: transitive
     description:
@@ -328,6 +338,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.0"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   stack_trace:
     dependency: transitive
     description:
@@ -368,6 +380,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.1"
+<<<<<<< HEAD
   typed_data:
     dependency: transitive
     description:
@@ -392,6 +405,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.3.3"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   vector_math:
     dependency: transitive
     description:
@@ -400,6 +415,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
+<<<<<<< HEAD
   vy_string_utils:
     dependency: transitive
     description:
@@ -408,6 +424,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.5"
+=======
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   web:
     dependency: transitive
     description:
@@ -417,5 +435,9 @@ packages:
     source: hosted
     version: "0.3.0"
 sdks:
+<<<<<<< HEAD
   dart: ">=3.2.0 <4.0.0"
+=======
+  dart: ">=3.2.0-194.0.dev <4.0.0"
+>>>>>>> d1a329c296d8a52e7034f27d53231da7b8162aea
   flutter: ">=1.16.0"
