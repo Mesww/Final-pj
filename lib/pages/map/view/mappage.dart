@@ -24,7 +24,7 @@ class _MappageState extends State<Mappage> {
       ),
       body: GoogleMap(
           initialCameraPosition:
-              CameraPosition(target: _pGooglePlex, zoom: 16.2)),
+              CameraPosition(target: _pGooglePlex, zoom: 16.0)),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
