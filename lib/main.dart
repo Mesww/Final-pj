@@ -1,20 +1,10 @@
 import 'dart:async';
 
-<<<<<<< HEAD
-import 'package:final_pj/home_screen.dart';
-import 'package:final_pj/pages/login/login.dart';
-import 'package:final_pj/provider/users_list.dart';
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:provider/provider.dart';
-import 'pages/home/home.dart';
-=======
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 // import 'package:location/location.dart';
 
 // import 'pages/home/home.dart';
->>>>>>> Day
 
 Future<void> main() async {
   runApp(const MyApp());
@@ -31,21 +21,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => usersProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const MapSample(),
-      ),
-=======
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -53,7 +28,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MapSample(),
->>>>>>> Day
     );
   }
 }
@@ -69,16 +43,6 @@ class MapSampleState extends State<MapSample> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-<<<<<<< HEAD
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(20.045235065751097, 99.89519835955262),
-    zoom: 14.4746,
-  );
-
-  static const CameraPosition _kLake = CameraPosition(
-      bearing: 192.8334901395799,
-      target: LatLng(20.045235065751097, 99.89519835955262),
-=======
   static const LatLng stasion = LatLng(20.045746912937343, 99.89156999969383);
 
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -108,17 +72,67 @@ class MapSampleState extends State<MapSample> {
       position: LatLng(20.052565215511244, 99.89231798713149),
       infoWindow: InfoWindow(title: '4'),
     ),
-        Marker(
+    Marker(
       markerId: MarkerId('5'),
       position: LatLng(20.050816843021277, 99.89121969349162),
       infoWindow: InfoWindow(title: '5'),
     ),
+    Marker(
+      markerId: MarkerId('6'),
+      position: LatLng(20.049137353450433, 99.891250485570452),
+      infoWindow: InfoWindow(title: '6'),
+    ),
+    Marker(
+      markerId: MarkerId('7'),
+      position: LatLng(20.048397671997282, 99.89320068812843),
+      infoWindow: InfoWindow(title: '7'),
+    ),
+    Marker(
+      markerId: MarkerId('8'),
+      position: LatLng(20.047264832318994, 99.89314563095694),
+      infoWindow: InfoWindow(title: '8'),
+    ),
+        Marker(
+      markerId: MarkerId('9'),
+      position: LatLng(20.045737111535473, 99.89152205304603),
+      infoWindow: InfoWindow(title: '9'),
+    ),
      Marker(
+      markerId: MarkerId('10'),
+      position: LatLng(20.043881444753783, 99.89348617576454),
+      infoWindow: InfoWindow(title: '10'),
+    ),
+     Marker(
+      markerId: MarkerId('11'),
+      position: LatLng(20.043919609786567, 99.89490923095694),
+      infoWindow: InfoWindow(title: '11'),
+    ),
+    Marker(
+      markerId: MarkerId('12'),
+      position: LatLng(20.043311336533844, 99.89529707515575),
+      infoWindow: InfoWindow(title: '12'),
+    ),
+    Marker(
+      markerId: MarkerId('13'),
+      position: LatLng(20.043845538331563, 99.8934754469289),
+      infoWindow: InfoWindow(title: '13'),
+    ),
+ Marker(
+      markerId: MarkerId('14'),
+      position: LatLng(20.045659393241642, 99.89133178188165),
+      infoWindow: InfoWindow(title: '14'),
+    ),
+    Marker(
+      markerId: MarkerId('15'),
+      position: LatLng(20.049391118491396, 99.89111283095696),
+      infoWindow: InfoWindow(title: '15'),
+    ),
+    Marker(
       markerId: MarkerId('16'),
       position: LatLng(20.05083048583872, 99.89115650886787),
       infoWindow: InfoWindow(title: '16'),
     ),
-     Marker(
+    Marker(
       markerId: MarkerId('17'),
       position: LatLng(20.052689636083315, 99.89234180090831),
       infoWindow: InfoWindow(title: '17'),
@@ -154,7 +168,6 @@ class MapSampleState extends State<MapSample> {
   static const CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
       target: LatLng(20.04515846096742, 99.89457862103053),
->>>>>>> Day
       tilt: 59.440717697143555,
       zoom: 19.151926040649414);
 
@@ -162,12 +175,9 @@ class MapSampleState extends State<MapSample> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GoogleMap(
-        mapType: MapType.hybrid,
+        mapType: MapType.normal,
         initialCameraPosition: _kGooglePlex,
-<<<<<<< HEAD
-=======
         markers: Set<Marker>.of(_marker),
->>>>>>> Day
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
