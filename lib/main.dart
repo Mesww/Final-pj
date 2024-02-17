@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         primaryColorDark: Palette.bluegray,
         useMaterial3: true,
       ),
-      home: const Homepage(),
+      home: const Mappage(),
     );
 }
 }
