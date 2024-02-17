@@ -26,7 +26,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
-        
       ),
       home: const MapSample(),
     );
@@ -45,13 +44,13 @@ class MapSampleState extends State<MapSample> {
       Completer<GoogleMapController>();
 
   static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
+    target: LatLng(20.04515846096742, 99.89457862103053),
+    zoom: 16.2,
   );
 
   static const CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
-      target: LatLng(37.43296265331129, -122.08832357078792),
+      target: LatLng(20.04515846096742, 99.89457862103053),
       tilt: 59.440717697143555,
       zoom: 19.151926040649414);
 
