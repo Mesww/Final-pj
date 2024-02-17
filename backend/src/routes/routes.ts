@@ -29,7 +29,7 @@ router.post("/add", async (req: Request, res: Response) => {
 
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const dataItem = await Todo.find({});
+    const dataItem = await Todo.find({},{_id:1,title:1});
 
     res.status(200).json({
       data: dataItem,
