@@ -1,0 +1,92 @@
+import 'dart:async';
+import 'package:final_pj/pages/map/const.dart';
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class MapPage extends StatefulWidget {
+  const MapPage({super.key});
+
+  @override
+  State<MapPage> createState() => MapPageState();
+}
+
+class MapPageState extends State<MapPage> {
+  final Completer<GoogleMapController> _controller = Completer();
+
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(20.050236851378024, 99.89456487892942),
+    zoom: 16,
+  );
+
+  String selectedRoute = "";
+  final Set<Marker> _markers = {}; // Use a Set for markers
+
+  // Route 1
+  Polyline _polylineR1 = const Polyline(polylineId: PolylineId("polylineR1"));
+  // Route 2
+  Polyline _polylineR2 = const Polyline(polylineId: PolylineId("polylineR2"));
+
+  @override
+  void initState() {
+    super.initState();
+    _markers.addAll(list);
+    _setPolylinePoints();
+  }
+
+  void _setPolylinePoints() {
+    //Import form const.dart
+    _polylineR1 = _polylineR1.copyWith(
+      pointsParam: polylinePointsRoute1,
+      colorParam: Colors.blue,
+    );
+    _polylineR2 = _polylineR2.copyWith(
+      pointsParam: polylinePointsRoute2,
+      colorParam: Colors.blue,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: _kGooglePlex,
+              markers: _markers,
+              polylines: {
+                selectedRoute == "route1" ? _polylineR1 : _polylineR2
+              },
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    selectedRoute = "route1";
+                  });
+                },
+                child: const Text("Show Route 1"),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    selectedRoute = "route2";
+                  });
+                },
+                child: const Text("Show Route 2"),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
