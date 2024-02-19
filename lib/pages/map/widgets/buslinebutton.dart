@@ -1,3 +1,4 @@
+
 import 'package:final_pj/provider/busline_provider.dart';
 import 'package:flutter/material.dart';
 // import 'package:radial_button/widget/circle_floating_button.dart';
@@ -6,25 +7,32 @@ import 'package:provider/provider.dart';
 import 'fab_circular_menu.dart';
 
 class Buslinebutton extends StatelessWidget {
-  const Buslinebutton({Key? key}) : super(key: key);
+ Buslinebutton({Key? key}) : super(key: key);
 
   // String IsOpened = "No";
   // String BtnText = "OpenMenu";
   // final GlobalKey<FabCircularMenuState> fabKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
+    String selectedRoute = "";
     var busline_provider_get = context.watch<Busline_provider>();
     var busline_provider_set = context.read<Busline_provider>();
     var itemsActionBar = [
       FloatingActionButton(
         shape: CircleBorder(),
-        onPressed: () {},
+        onPressed: () {
+          selectedRoute = "route1";
+          print(selectedRoute);
+        },
         backgroundColor: Colors.red,
         child: Icon(MdiIcons.numeric1),
       ),
       FloatingActionButton(
         shape: CircleBorder(),
-        onPressed: () {},
+        onPressed: () {
+          selectedRoute = "route2";
+           print(selectedRoute);
+        },
         backgroundColor: Colors.green,
         child: Icon(MdiIcons.numeric2),
       ),
