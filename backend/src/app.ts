@@ -1,15 +1,25 @@
 import express,{Request,Response} from "express"
 import { router } from "./routes/routes";
+import { authroute } from "./routes/authroutes";
+
+
+const {logger} = require('./middle/logger');
+const errorHandler = require('./middle/errorHandle');
+const body_parser = require('body-parser');
+
+
 //import { mongoDBConnection } from "./database/data";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-
 const app = express();
+
+// app.use(logger);
 app.use(express.urlencoded({ extended: false}));
 app.use(express.json());
+
 
 try {
     if (!process.env.MONGODB_URL) {
@@ -24,6 +34,12 @@ try {
   
 
 app.use("/", router);
-app.listen(process.env.PORT || 8080 , () => {
+app.use("/users", authroute);
+
+app.use(authroute);
+
+// app.use(errorHandler);
+
+app.listen( 8080 , () => {
     console.log("Server is rocking at 8080");
 })

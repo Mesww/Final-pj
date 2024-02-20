@@ -1,14 +1,17 @@
-import mongoose from "mongoose";
+import mongoose, { Collection } from "mongoose";
 
 interface TodoI {
   title: string;
   description: string;
 }
 
-const todoSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: String,
-});
+const todoSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    description: String,
+  },
+  { collection: "todos" }
+);
 
 interface TodoDocument extends mongoose.Document {
   title: string;
@@ -17,7 +20,7 @@ interface TodoDocument extends mongoose.Document {
 }
 
 // Create the model with type annotations
-const Todo = mongoose.model<TodoDocument>('Todo', todoSchema);
+const Todo = mongoose.model<TodoDocument>("Todo", todoSchema);
 
 // Extend the model with the `set` method
 Todo.prototype.set = function (x: TodoI) {
@@ -26,8 +29,8 @@ Todo.prototype.set = function (x: TodoI) {
   return this.save(); // Save the document to the database
 };
 
-// Usage: 
+// Usage:
 const todo = new Todo();
 //todo.set({ title: "Some title", description: "Some description" });
 
-export { Todo }
+export { Todo };
