@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:final_pj/pages/map/widgets/const.dart';
+import 'package:final_pj/provider/changeRoute.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 
 class Mappage extends StatefulWidget {
-   Mappage({Key? key}) : super(key: key);
+  Mappage({
+    Key? key,
+  }) : super(key: key);
   @override
   State<Mappage> createState() => _MappageState();
 }
@@ -18,7 +22,7 @@ class _MappageState extends State<Mappage> {
     zoom: 16,
   );
 
-  String selectedRoute = '';
+  String selectedRoute = "";
   final Set<Marker> _markers = {};
 
 // Route 1
@@ -47,6 +51,7 @@ class _MappageState extends State<Mappage> {
 
   @override
   Widget build(BuildContext context) {
+    String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
@@ -67,28 +72,28 @@ class _MappageState extends State<Mappage> {
               },
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    selectedRoute = "route1";
-                  });
-                },
-                child: const Text("Show Route 1"),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    selectedRoute = "route2";
-                  });
-                },
-                child: const Text("Show Route 2"),
-              ),
-            ],
-          ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     ElevatedButton(
+          //       onPressed: () {
+          //         setState(() {
+          //           selectedRoute = "route1";
+          //         });
+          //       },
+          //       child: const Text("Show Route 1"),
+          //     ),
+          //     const SizedBox(width: 10),
+          //     ElevatedButton(
+          //       onPressed: () {
+          //         setState(() {
+          //           selectedRoute = "route2";
+          //         });
+          //       },
+          //       child: const Text("Show Route 2"),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),

@@ -1,4 +1,4 @@
-
+import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
@@ -10,7 +10,8 @@ void main() {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => Busline_provider()),
     ChangeNotifierProvider(create: (_) => usersProvider()),
-  ], child: const MyApp()));
+    ChangeNotifierProvider(create: (_) => ChangeRoute())
+  ], child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
