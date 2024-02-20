@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:form_validator/form_validator.dart';
 
+import '../../map/view/view.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -129,9 +130,11 @@ class LoginView extends StatelessWidget {
                   // !submit button
                   GestureDetector(
                     onTap: () {
-                      if (getFormLogin.get_formkey().currentState!.validate()) {
-                        getFormLogin.get_formkey().currentState!.save();
-                      }
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: ((context) => Mappage())));
+                      // if (getFormLogin.get_formkey().currentState!.validate()) {
+                      //   getFormLogin.get_formkey().currentState!.save();
+                      // }
                     },
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 25),
