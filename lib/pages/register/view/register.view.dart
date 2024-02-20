@@ -183,9 +183,16 @@ class RegisterView extends StatelessWidget {
                           .currentState!
                           .validate()) {
                         getFormRegister.get_formkey().currentState!.save();
-                        
-                         Provider.of<Register_provider>(context, listen: false).registerUser(getFormRegister.get_studentid_register().text,
-                            getFormRegister.get_password_register().text);
+
+                        Provider.of<Register_provider>(context, listen: false)
+                            .createUser(
+                          {
+                            "studentid":
+                                getFormRegister.get_studentid_register().text,
+                            "password":
+                                getFormRegister.get_password_register().text
+                          },
+                        );
                         // print(getFormRegister.get_studentID_register());
                         // AlertDialog(
                         //     content:

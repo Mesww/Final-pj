@@ -29,6 +29,7 @@ class Register_provider extends ChangeNotifier {
     "Accept": "application/json",
     "Content-Type": "application/json;charset=UTF-8"
   };
+
   final httpClient = http.Client();
 
   void set_obscure_password(bool obscure_password_register) {
@@ -56,29 +57,13 @@ class Register_provider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> registerUser(String student_id, String password) async {
-    Map<String, String> reqBody = {
-      'student_id': student_id,
-      'password': password
-    };
-    final Uri restAPIURL = Uri.parse(
-      "http://localhost:8080/register",
-    );
+  Future createUser(Map<String, String> body) async {
+    final Uri restAPIURL =
+        Uri.parse("https://server-api-final-f47d00dcc1f8.herokuapp.com/register");
 
-    try {
-      print(restAPIURL.port);
-      http.Response response = await httpClient.post(restAPIURL,
-          headers: customHeaders, body: jsonEncode(reqBody));
-      if (response.statusCode == 200) {
-        var jsonResponse = jsonDecode(response.body);
-        print(jsonResponse['status']);
-        return jsonResponse;
-      } else {
-        print("Failed to load data");
-      }
-    } catch (e) {
-      print('Error during API call: $e');
-    }
-    return 'database error';
+    http.Response response = await httpClient.post(restAPIURL,
+        headers: customHeaders, body: jsonEncode(body));
+    print(response.statusCode);
+    return response.body;
   }
 }
