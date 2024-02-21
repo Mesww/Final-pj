@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/provider/changeRoute.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 class Mappage extends StatefulWidget {
-  Mappage({
+  const Mappage({
     Key? key,
   }) : super(key: key);
   @override
@@ -41,11 +40,11 @@ class _MappageState extends State<Mappage> {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
       pointsParam: polylinePointsRoute1,
-      colorParam: Colors.blue,
+      colorParam: Colors.red,
     );
     _polylineR2 = _polylineR2.copyWith(
       pointsParam: polylinePointsRoute2,
-      colorParam: Colors.blue,
+      colorParam: Colors.green,
     );
   }
 
@@ -55,45 +54,50 @@ class _MappageState extends State<Mappage> {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             const Text('Map'),
+            Row(
+              children: [
+                if (selectedRoute == "route2")
+                  const Text("Route 2 Hospital")
+                else
+                  const Text("Route 1 C5"),
+              ],
+            )
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              markers: _markers,
-              polylines: {
-                selectedRoute == "route1" ? _polylineR1 : _polylineR2
-              },
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-            ),
+      body: Stack(
+        children: <Widget>[
+          GoogleMap(
+            mapType: MapType.normal,
+            initialCameraPosition: _kGooglePlex,
+            markers: _markers,
+            polylines: {selectedRoute == "route2" ? _polylineR2 : _polylineR1},
+            onMapCreated: (GoogleMapController controller) {
+              _controller.complete(controller);
+            },
           ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     ElevatedButton(
-          //       onPressed: () {
-          //         setState(() {
-          //           selectedRoute = "route1";
-          //         });
-          //       },
-          //       child: const Text("Show Route 1"),
-          //     ),
-          //     const SizedBox(width: 10),
-          //     ElevatedButton(
-          //       onPressed: () {
-          //         setState(() {
-          //           selectedRoute = "route2";
-          //         });
-          //       },
-          //       child: const Text("Show Route 2"),
-          //     ),
-          //   ],
-          // ),
+          const SizedBox(
+            width: 10,
+          ),
+          // Align(
+          //   alignment: AlignmentDirectional.topEnd, // <-- SEE HERE
+          //   child: Container(
+          //     child: Center(
+          //         child: Text(
+          //       'Route 1 C5 ',
+          //       style: TextStyle(fontSize: 20),
+          //     )),
+          //     width: 200,
+          //     height: 30,
+          //     decoration: BoxDecoration(
+          //         borderRadius: BorderRadius.circular(15),
+          //         color: Palette.bluegray),
+          //   ),
+          // )
         ],
       ),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),
