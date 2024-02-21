@@ -1,4 +1,5 @@
-import 'package:final_pj/provider/changeRoute.dart';
+import 'package:final_pj/pages/login/login.dart';
+// import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
@@ -7,11 +8,17 @@ import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (context) => Busline_provider()),
-    ChangeNotifierProvider(create: (_) => usersProvider()),
-    ChangeNotifierProvider(create: (_) => ChangeRoute())
-  ], child: MyApp()));
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (context)=>Busline_provider()),
+      ChangeNotifierProvider(create: (context)=>Form_login()),
+      ChangeNotifierProvider(create: (_) => usersProvider()),
+      ChangeNotifierProvider(create: (_) => Register_provider()),
+      ChangeNotifierProvider(create: (_) => ChangeRoute()),
+    ],
+    child: const MyApp(),
+  )
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,11 +30,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         primaryColor: Palette.redwood,
-        primaryColorLight: Palette.vermilion,
-        primaryColorDark: Palette.bluegray,
+        primaryColorLight: Palette.goldmfu,
         useMaterial3: true,
       ),
-      home: Mappage(),
+      home: const LoginView(),
     );
   }
 }
