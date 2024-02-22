@@ -46,6 +46,7 @@ dependencies:
   http: ^1.2.0
   simple_animations: ^5.0.2
   form_validator: ^2.1.1
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:
