@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/provider/changeRoute.dart';
+import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:geolocator/geolocator.dart';
@@ -27,7 +28,6 @@ class _MappageState extends State<Mappage> {
   // กำหนด State สำหรับ Location ของ User
   late LatLng _userLocation = LatLng(20.050236851378024, 99.89456487892942);
 
-
 // Route 1
   Polyline _polylineR1 = const Polyline(polylineId: PolylineId("polylineR1"));
   // Route 2
@@ -40,21 +40,19 @@ class _MappageState extends State<Mappage> {
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
-
-      // distace display realtime
-     _positionStream = Geolocator.getPositionStream().listen((position) {
+    // distace display realtime
+    _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
         _userLocation = LatLng(position.latitude, position.longitude);
       });
     });
   }
 
-   @override
+  @override
   void dispose() {
     super.dispose();
     _positionStream?.cancel(); // Cancel the stream subscription
   }
-
 
   //ลากเส้นทาง
   void _setPolylinePoints() {
@@ -111,6 +109,19 @@ class _MappageState extends State<Mappage> {
     return closestMarker;
   }
 
+  // set activity ไป database ======================================================================================================
+  setAllActivity() {
+    const std_id = '123';
+    final setActivity = context.read<actiivity_provider>();
+    setActivity.set_studentId_act(std_id);
+    setActivity.set_marker_act('${closestMarker.infoWindow.title}');
+    setActivity.set_location_act("${closestMarker.position}");
+    setActivity.set_time_act("10:00");
+  }
+//  ====================================================================================================================================
+
+
+
 // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
   void _showClosestMarker() {
     _findClosestMarker();
@@ -133,6 +144,7 @@ class _MappageState extends State<Mappage> {
 
   @override
   Widget build(BuildContext context) {
+       final getActivity = context.watch<actiivity_provider>();
     String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
     return Scaffold(
@@ -170,7 +182,18 @@ class _MappageState extends State<Mappage> {
               bottom: 20,
               left: 20,
               child: FloatingActionButton(
-                onPressed: _showClosestMarker,
+                onPressed: () {
+                  _showClosestMarker();
+                  setAllActivity();
+                    Provider.of<actiivity_provider>(context, listen: false).createActivity(
+      {
+        "studentid": getActivity.get_studentId_act(),
+        "location": getActivity.get_location_act(),
+        "marker": getActivity.get_marker_act(),
+        "time": getActivity.get_time_act(),
+      },
+    );
+                },
                 child: const Icon(Icons.search),
               )),
           // แสดง TextOverlay สำหรับแสดงระยะทาง
