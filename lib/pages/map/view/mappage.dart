@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/provider/changeRoute.dart';
+import 'package:final_pj/services/auth.service.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Mappage extends StatefulWidget {
   Mappage({
@@ -49,13 +52,24 @@ class _MappageState extends State<Mappage> {
     );
   }
 
+  void signOutUser() {
+    AuthService().signOut(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map'),
+        leading: IconButton(
+            onPressed: () {
+              signOutUser();
+            },
+            icon: const Icon(Icons.logout_rounded)),
+        automaticallyImplyLeading: false,
+        title: Center(child: const Text('Map')),
       ),
       body: Column(
         children: [

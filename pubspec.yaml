@@ -46,6 +46,8 @@ dependencies:
   http: ^1.2.0
   simple_animations: ^5.0.2
   form_validator: ^2.1.1
+  quickalert: ^1.0.2
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
