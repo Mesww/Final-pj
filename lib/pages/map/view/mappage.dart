@@ -111,16 +111,17 @@ class _MappageState extends State<Mappage> {
 
   // set activity ไป database ======================================================================================================
   setAllActivity() {
+    DateTime now = DateTime.now();
+
     const std_id = '123';
     final setActivity = context.read<actiivity_provider>();
     setActivity.set_studentId_act(std_id);
     setActivity.set_marker_act('${closestMarker.infoWindow.title}');
     setActivity.set_location_act("${closestMarker.position}");
-    setActivity.set_time_act("10:00");
+    setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
+    setActivity.set_time_act("${now}");
   }
 //  ====================================================================================================================================
-
-
 
 // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
   void _showClosestMarker() {
@@ -142,9 +143,20 @@ class _MappageState extends State<Mappage> {
     return distanceText;
   }
 
+  //คำนวนเวลา
+  String _getTimeText() {
+    //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
+    closestMarker = _findClosestMarker();
+    double distanceTime = _calculateDistance(closestMarker.position);
+    double speed = 50.0; // กม./ชม. (ค่าประมาณ)
+    double time = distanceTime / speed;
+    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
+    return distanceTimeText;
+  }
+
   @override
   Widget build(BuildContext context) {
-       final getActivity = context.watch<actiivity_provider>();
+    final getActivity = context.watch<actiivity_provider>();
     String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
     return Scaffold(
@@ -185,14 +197,16 @@ class _MappageState extends State<Mappage> {
                 onPressed: () {
                   _showClosestMarker();
                   setAllActivity();
-                    Provider.of<actiivity_provider>(context, listen: false).createActivity(
-      {
-        "studentid": getActivity.get_studentId_act(),
-        "location": getActivity.get_location_act(),
-        "marker": getActivity.get_marker_act(),
-        "time": getActivity.get_time_act(),
-      },
-    );
+                  Provider.of<actiivity_provider>(context, listen: false)
+                      .createActivity(
+                    {
+                      "studentid": getActivity.get_studentId_act(),
+                      "location": getActivity.get_location_act(),
+                      "marker": getActivity.get_marker_act(),
+                      "data": getActivity.get_date_act(),
+                      "time": getActivity.get_time_act(),
+                    },
+                  );
                 },
                 child: const Icon(Icons.search),
               )),
@@ -201,11 +215,23 @@ class _MappageState extends State<Mappage> {
             top: 20,
             left: 20,
             child: SizedBox(
-              width: 170,
+              width: 250,
               height: 30,
               child: Text(
                 // แสดงค่าระยะทาง
                 _getDistanceText(),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 39,
+            left: 20,
+            child: SizedBox(
+              width: 250,
+              height: 30,
+              child: Text(
+                // แสดงค่าเวลา
+                _getTimeText(),
               ),
             ),
           )
