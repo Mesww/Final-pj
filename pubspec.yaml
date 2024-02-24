@@ -48,6 +48,7 @@ dependencies:
   form_validator: ^2.1.1
   quickalert: ^1.0.2
   shared_preferences: ^2.2.2
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:

@@ -4,8 +4,10 @@ import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/services/auth.service.dart';
+import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,14 +21,16 @@ class Mappage extends StatefulWidget {
 }
 
 class _MappageState extends State<Mappage> {
-  final Completer<GoogleMapController> _controller = Completer();
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
   );
-
+  final Completer<GoogleMapController> _controller = Completer();
+  StreamSubscription<Position>? _positionStream;
   String selectedRoute = "";
   final Set<Marker> _markers = {};
+  // กำหนด State สำหรับ Location ของ User
+  late LatLng _userLocation = LatLng(20.050236851378024, 99.89456487892942);
 
 // Route 1
   Polyline _polylineR1 = const Polyline(polylineId: PolylineId("polylineR1"));
@@ -38,8 +42,23 @@ class _MappageState extends State<Mappage> {
     super.initState();
     _markers.addAll(list);
     _setPolylinePoints();
+    _requestLocationPermission();
+    _getUserLocation();
+    // distace display realtime
+    _positionStream = Geolocator.getPositionStream().listen((position) {
+      setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      });
+    });
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    _positionStream?.cancel(); // Cancel the stream subscription
+  }
+
+  //ลากเส้นทาง
   void _setPolylinePoints() {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
@@ -55,23 +74,135 @@ class _MappageState extends State<Mappage> {
   void signOutUser() {
     AuthService().signOut(context);
   }
+  // Permission
+  Future<LocationPermission> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return permission;
+  }
+
+  // ดึง Location ของ User
+  void _getUserLocation() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      _userLocation = LatLng(position.latitude, position.longitude);
+    });
+  }
+
+  //คำนวณระยะทางระหว่าง Location ของ User กับ Markers
+  double _calculateDistance(LatLng markerLatLng) {
+    return Geolocator.distanceBetween(_userLocation.latitude,
+        _userLocation.longitude, markerLatLng.latitude, markerLatLng.longitude);
+  }
+
+  //หา Marker ที่อยู่ใกล้ Location ของ User มากที่สุด
+  Marker closestMarker = const Marker(
+    markerId: MarkerId('default'),
+    position: LatLng(0, 0), // Set default coordinates
+  );
+
+  Marker _findClosestMarker() {
+    double closestDistance = double.infinity;
+    for (Marker marker in _markers) {
+      double distance = _calculateDistance(marker.position);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestMarker = marker;
+      }
+    }
+    return closestMarker;
+  }
+
+  // set activity ไป database ======================================================================================================
+  setAllActivity() {
+    DateTime now = DateTime.now();
+
+    const std_id = '123';
+    final setActivity = context.read<actiivity_provider>();
+    setActivity.set_studentId_act(std_id);
+    setActivity.set_marker_act('${closestMarker.infoWindow.title}');
+    setActivity.set_location_act("${closestMarker.position}");
+    setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
+    setActivity.set_time_act("${now}");
+  }
+//  ====================================================================================================================================
+
+// แสดงผล Marker ที่อยู่ใกล้ Location ของ User
+  void _showClosestMarker() {
+    _findClosestMarker();
+    _getUserLocation();
+    _getDistanceText();
+    Marker closestMarker = _findClosestMarker();
+    print(closestMarker);
+    // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
+    // ...
+  }
+
+  // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
+  String _getDistanceText() {
+    double distance = _calculateDistance(_findClosestMarker().position);
+    // แปลงค่าระยะทางเป็น String
+    String distanceText =
+        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} ${distance.toStringAsFixed(0)} ม.';
+    return distanceText;
+  }
+
+  //คำนวนเวลา
+  String _getTimeText() {
+    //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
+    closestMarker = _findClosestMarker();
+    double distanceTime = _calculateDistance(closestMarker.position);
+    double speed = 50.0; // กม./ชม. (ค่าประมาณ)
+    double time = distanceTime / speed;
+    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
+    return distanceTimeText;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final getActivity = context.watch<actiivity_provider>();
     String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         leading: IconButton(
             onPressed: () {
               signOutUser();
-            },
-            icon: const Icon(Icons.logout_rounded)),
-        automaticallyImplyLeading: false,
-        title: Center(child: const Text('Map')),
+                 },
+           icon: const Icon(Icons.logout_rounded)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Map'),
+            Row(
+              children: [
+                if (selectedRoute == "route2")
+                  const Text("Route 2 Hospital")
+                else
+                  const Text("Route 1 C5"),
+              ],
+            )
+          ],
+        ),
       ),
-      body: Column(
+      body: Stack(
+        children: <Widget>[
+          GoogleMap(
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            mapType: MapType.normal,
+            initialCameraPosition: _kGooglePlex,
+            markers: _markers.toSet(),
+            polylines: {selectedRoute == "route2" ? _polylineR2 : _polylineR1},
+            onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);}  
+      ),
+   Column(
         children: [
           Expanded(
             child: GoogleMap(
@@ -86,30 +217,69 @@ class _MappageState extends State<Mappage> {
               },
             ),
           ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     ElevatedButton(
-          //       onPressed: () {
-          //         setState(() {
-          //           selectedRoute = "route1";
-          //         });
-          //       },
-          //       child: const Text("Show Route 1"),
-          //     ),
-          //     const SizedBox(width: 10),
-          //     ElevatedButton(
-          //       onPressed: () {
-          //         setState(() {
-          //           selectedRoute = "route2";
-          //         });
-          //       },
-          //       child: const Text("Show Route 2"),
-          //     ),
-          //   ],
-          // ),
+          // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
+          Positioned(
+              bottom: 20,
+              left: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  _showClosestMarker();
+                  setAllActivity();
+                  Provider.of<actiivity_provider>(context, listen: false)
+                      .createActivity(
+                    {
+                      "studentid": getActivity.get_studentId_act(),
+                      "location": getActivity.get_location_act(),
+                      "marker": getActivity.get_marker_act(),
+                      "data": getActivity.get_date_act(),
+                      "time": getActivity.get_time_act(),
+                    },
+                  );
+                },
+                child: const Icon(Icons.search),
+              )),
+          // แสดง TextOverlay สำหรับแสดงระยะทาง
+          Positioned(
+            top: 20,
+            left: 20,
+            child: SizedBox(
+              width: 250,
+              height: 30,
+              child: Text(
+                // แสดงค่าระยะทาง
+                _getDistanceText(),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 39,
+            left: 20,
+            child: SizedBox(
+              width: 250,
+              height: 30,
+              child: Text(
+                // แสดงค่าเวลา
+                _getTimeText(),
+              ),
+            ),
+          ),
+          // Align(
+          //   alignment: AlignmentDirectional.topCenter, // <-- SEE HERE
+          //   child: Container(
+          //     child: Center(
+          //         child: Text(
+          //       'Route 1 C5 ',
+          //       style: TextStyle(fontSize: 20),
+          //     )),
+          //     width: 200,
+          //     height: 100,
+          //     decoration: BoxDecoration(
+          //         borderRadius: BorderRadius.circular(15),
+          //         color: Colors.amber,
+          //   ),
+          // )),
         ],
-      ),
+      ),]),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
