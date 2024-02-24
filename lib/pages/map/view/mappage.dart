@@ -63,17 +63,18 @@ class _MappageState extends State<Mappage> {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
       pointsParam: polylinePointsRoute1,
-      colorParam: Colors.blue,
+      colorParam: Colors.red,
     );
     _polylineR2 = _polylineR2.copyWith(
       pointsParam: polylinePointsRoute2,
-      colorParam: Colors.blue,
+      colorParam: Colors.green,
     );
   }
 
   void signOutUser() {
     AuthService().signOut(context);
   }
+
   // Permission
   Future<LocationPermission> _requestLocationPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -155,7 +156,7 @@ class _MappageState extends State<Mappage> {
     //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
     closestMarker = _findClosestMarker();
     double distanceTime = _calculateDistance(closestMarker.position);
-    double speed = 50.0; // กม./ชม. (ค่าประมาณ)
+    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
     double time = distanceTime / speed;
     String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
     return distanceTimeText;
@@ -171,10 +172,11 @@ class _MappageState extends State<Mappage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
+          color: Colors.red,
             onPressed: () {
               signOutUser();
-                 },
-           icon: const Icon(Icons.logout_rounded)),
+            },
+            icon: const Icon(Icons.logout_rounded)),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -190,9 +192,8 @@ class _MappageState extends State<Mappage> {
           ],
         ),
       ),
-      body: Stack(
-        children: <Widget>[
-          GoogleMap(
+      body: Stack(children: <Widget>[
+        GoogleMap(
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             mapType: MapType.normal,
@@ -200,86 +201,55 @@ class _MappageState extends State<Mappage> {
             markers: _markers.toSet(),
             polylines: {selectedRoute == "route2" ? _polylineR2 : _polylineR1},
             onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);}  
-      ),
-   Column(
-        children: [
-          Expanded(
-            child: GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              markers: _markers,
-              polylines: {
-                selectedRoute == "route1" ? _polylineR1 : _polylineR2
-              },
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-            ),
-          ),
-          // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
-          Positioned(
-              bottom: 20,
-              left: 20,
-              child: FloatingActionButton(
-                onPressed: () {
-                  _showClosestMarker();
-                  setAllActivity();
-                  Provider.of<actiivity_provider>(context, listen: false)
-                      .createActivity(
-                    {
-                      "studentid": getActivity.get_studentId_act(),
-                      "location": getActivity.get_location_act(),
-                      "marker": getActivity.get_marker_act(),
-                      "data": getActivity.get_date_act(),
-                      "time": getActivity.get_time_act(),
-                    },
-                  );
-                },
-                child: const Icon(Icons.search),
-              )),
-          // แสดง TextOverlay สำหรับแสดงระยะทาง
-          Positioned(
-            top: 20,
+              _controller.complete(controller);
+            }),
+        // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
+        Positioned(
+            bottom: 20,
             left: 20,
-            child: SizedBox(
-              width: 250,
-              height: 30,
-              child: Text(
-                // แสดงค่าระยะทาง
-                _getDistanceText(),
-              ),
+            child: FloatingActionButton(
+              onPressed: () {
+                _showClosestMarker();
+                setAllActivity();
+                Provider.of<actiivity_provider>(context, listen: false)
+                    .createActivity(
+                  {
+                    "studentid": getActivity.get_studentId_act(),
+                    "location": getActivity.get_location_act(),
+                    "marker": getActivity.get_marker_act(),
+                    "data": getActivity.get_date_act(),
+                    "time": getActivity.get_time_act(),
+                  },
+                );
+              },
+              child: const Icon(Icons.search),
+            )),
+        // แสดง TextOverlay สำหรับแสดงระยะทาง
+        Positioned(
+          top: 20,
+          left: 20,
+          child: SizedBox(
+            width: 250,
+            height: 30,
+            child: Text(
+              // แสดงค่าระยะทาง
+              _getDistanceText(),
             ),
           ),
-          Positioned(
-            top: 39,
-            left: 20,
-            child: SizedBox(
-              width: 250,
-              height: 30,
-              child: Text(
-                // แสดงค่าเวลา
-                _getTimeText(),
-              ),
+        ),
+        Positioned(
+          top: 39,
+          left: 20,
+          child: SizedBox(
+            width: 250,
+            height: 30,
+            child: Text(
+              // แสดงค่าเวลา
+              _getTimeText(),
             ),
           ),
-          // Align(
-          //   alignment: AlignmentDirectional.topCenter, // <-- SEE HERE
-          //   child: Container(
-          //     child: Center(
-          //         child: Text(
-          //       'Route 1 C5 ',
-          //       style: TextStyle(fontSize: 20),
-          //     )),
-          //     width: 200,
-          //     height: 100,
-          //     decoration: BoxDecoration(
-          //         borderRadius: BorderRadius.circular(15),
-          //         color: Colors.amber,
-          //   ),
-          // )),
-        ],
-      ),]),
+        ),
+      ]),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
