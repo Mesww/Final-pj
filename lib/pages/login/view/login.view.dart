@@ -56,6 +56,7 @@ class LoginView extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 25.0),
                     child: Container(
                       child: TextFormField(
+                        controller: getFormLogin.get_studentid(),
                         keyboardType: TextInputType.numberWithOptions(
                             signed: false, decimal: true),
                         onSaved: (String? studentID) =>
@@ -89,6 +90,7 @@ class LoginView extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 25.0),
                     child: Container(
                       child: TextFormField(
+                        controller: getFormLogin.password,
                         keyboardType: TextInputType.visiblePassword,
                         onSaved: (String? password) =>
                             setFormLogin.set__password(password!),
@@ -130,11 +132,12 @@ class LoginView extends StatelessWidget {
                   // !submit button
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: ((context) => Mappage())));
-                      // if (getFormLogin.get_formkey().currentState!.validate()) {
-                      //   getFormLogin.get_formkey().currentState!.save();
-                      // }
+                      // Navigator.pushReplacement(context,
+                      //     MaterialPageRoute(builder: ((context) => Mappage())));
+                      if (getFormLogin.get_formkey().currentState!.validate()) {
+                        getFormLogin.get_formkey().currentState!.save();
+                        setFormLogin.loginUser(context);
+                      }
                     },
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 25),

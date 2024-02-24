@@ -1,13 +1,17 @@
 import 'dart:async';
+
+import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/provider/changeRoute.dart';
+import 'package:final_pj/services/auth.service.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Mappage extends StatefulWidget {
-  const Mappage({
+  Mappage({
     Key? key,
   }) : super(key: key);
   @override
@@ -40,64 +44,70 @@ class _MappageState extends State<Mappage> {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
       pointsParam: polylinePointsRoute1,
-      colorParam: Colors.red,
+      colorParam: Colors.blue,
     );
     _polylineR2 = _polylineR2.copyWith(
       pointsParam: polylinePointsRoute2,
-      colorParam: Colors.green,
+      colorParam: Colors.blue,
     );
+  }
+
+  void signOutUser() {
+    AuthService().signOut(context);
   }
 
   @override
   Widget build(BuildContext context) {
     String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-             const Text('Map'),
-            Row(
-              children: [
-                if (selectedRoute == "route2")
-                  const Text("Route 2 Hospital")
-                else
-                  const Text("Route 1 C5"),
-              ],
-            )
-          ],
-        ),
-      ),
-      body: Stack(
-        children: <Widget>[
-          GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: _kGooglePlex,
-            markers: _markers,
-            polylines: {selectedRoute == "route2" ? _polylineR2 : _polylineR1},
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
+        leading: IconButton(
+            onPressed: () {
+              signOutUser();
             },
+            icon: const Icon(Icons.logout_rounded)),
+        automaticallyImplyLeading: false,
+        title: Center(child: const Text('Map')),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: GoogleMap(
+              mapType: MapType.normal,
+              initialCameraPosition: _kGooglePlex,
+              markers: _markers,
+              polylines: {
+                selectedRoute == "route1" ? _polylineR1 : _polylineR2
+              },
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
           ),
-          const SizedBox(
-            width: 10,
-          ),
-          // Align(
-          //   alignment: AlignmentDirectional.topEnd, // <-- SEE HERE
-          //   child: Container(
-          //     child: Center(
-          //         child: Text(
-          //       'Route 1 C5 ',
-          //       style: TextStyle(fontSize: 20),
-          //     )),
-          //     width: 200,
-          //     height: 30,
-          //     decoration: BoxDecoration(
-          //         borderRadius: BorderRadius.circular(15),
-          //         color: Palette.bluegray),
-          //   ),
-          // )
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     ElevatedButton(
+          //       onPressed: () {
+          //         setState(() {
+          //           selectedRoute = "route1";
+          //         });
+          //       },
+          //       child: const Text("Show Route 1"),
+          //     ),
+          //     const SizedBox(width: 10),
+          //     ElevatedButton(
+          //       onPressed: () {
+          //         setState(() {
+          //           selectedRoute = "route2";
+          //         });
+          //       },
+          //       child: const Text("Show Route 2"),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
       floatingActionButton: Builder(builder: (context) => Buslinebutton()),

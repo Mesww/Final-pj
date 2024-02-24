@@ -1,9 +1,11 @@
+import 'package:final_pj/pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/login/widget/widget.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:form_validator/form_validator.dart';
+import 'package:quickalert/quickalert.dart';
 
 class RegisterView extends StatelessWidget {
   const RegisterView({Key? key}) : super(key: key);
@@ -51,6 +53,37 @@ class RegisterView extends StatelessWidget {
                     height: 20,
                   ),
                   // !form
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 25.0),
+                    child: Container(
+                      child: TextFormField(
+                        controller: getFormRegister.email_register(),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter email';
+                          }
+                          return null;
+                        },
+                        style: TextStyle(color: Theme.of(context).primaryColor),
+                        decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.grey[200],
+                            border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.circular(12)),
+                            hintStyle: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            hintText: 'Email',
+                            prefixIcon: Icon(Icons.person),
+                            prefixIconColor: Theme.of(context).primaryColor),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 4,
+                  ),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 25.0),
                     child: Container(
@@ -183,16 +216,9 @@ class RegisterView extends StatelessWidget {
                           .currentState!
                           .validate()) {
                         getFormRegister.get_formkey().currentState!.save();
+                        setFormRegister.signupUser(context);
+                        getFormRegister.get_formkey().currentState!.reset();
 
-                        Provider.of<Register_provider>(context, listen: false)
-                            .createUser(
-                          {
-                            "studentid":
-                                getFormRegister.get_studentid_register().text,
-                            "password":
-                                getFormRegister.get_password_register().text
-                          },
-                        );
                         // print(getFormRegister.get_studentID_register());
                         // AlertDialog(
                         //     content:
