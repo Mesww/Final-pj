@@ -29,6 +29,9 @@ class _MappageState extends State<Mappage> {
   StreamSubscription<Position>? _positionStream;
   String selectedRoute = "";
   final Set<Marker> _markers = {};
+
+  final double _proximityThreshold = 5;
+
   // กำหนด State สำหรับ Location ของ User
   late LatLng _userLocation = LatLng(20.050236851378024, 99.89456487892942);
 
@@ -44,10 +47,12 @@ class _MappageState extends State<Mappage> {
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
+
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
         _userLocation = LatLng(position.latitude, position.longitude);
+        // print(_userLocation);
       });
     });
   }
@@ -120,10 +125,10 @@ class _MappageState extends State<Mappage> {
   // set activity ไป database ======================================================================================================
   setAllActivity() {
     DateTime now = DateTime.now();
-
-    const std_id = '123';
+    var user = Provider.of<UserProvider>(context, listen: false);
+    // const std_id = '123';
     final setActivity = context.read<actiivity_provider>();
-    setActivity.set_studentId_act(std_id);
+    setActivity.set_studentId_act(user.user.studentid);
     setActivity.set_marker_act('${closestMarker.infoWindow.title}');
     setActivity.set_location_act("${closestMarker.position}");
     setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
@@ -140,6 +145,7 @@ class _MappageState extends State<Mappage> {
     print(closestMarker);
     // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
     // ...
+
   }
 
   // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
@@ -172,7 +178,7 @@ class _MappageState extends State<Mappage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
-          color: Colors.red,
+            color: Colors.red,
             onPressed: () {
               signOutUser();
             },
@@ -211,6 +217,9 @@ class _MappageState extends State<Mappage> {
               onPressed: () {
                 _showClosestMarker();
                 setAllActivity();
+                // get current user information
+                var user = Provider.of<UserProvider>(context, listen: false);
+                print('StudentID: ' + user.user.studentid);
                 Provider.of<actiivity_provider>(context, listen: false)
                     .createActivity(
                   {
@@ -219,6 +228,7 @@ class _MappageState extends State<Mappage> {
                     "marker": getActivity.get_marker_act(),
                     "data": getActivity.get_date_act(),
                     "time": getActivity.get_time_act(),
+                    "route":selectedRoute
                   },
                 );
               },

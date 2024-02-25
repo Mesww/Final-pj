@@ -9,6 +9,7 @@ class actiivity_provider extends ChangeNotifier {
   late String date_act;
   late String time_act;
 
+
   String get_studentId_act() => this.studentId_act;
   String get_location_act() => this.location_act;
   String get_marker_act() => this.marker_act;
