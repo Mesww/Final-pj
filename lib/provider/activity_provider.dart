@@ -9,7 +9,6 @@ class actiivity_provider extends ChangeNotifier {
   late String date_act;
   late String time_act;
 
-
   String get_studentId_act() => this.studentId_act;
   String get_location_act() => this.location_act;
   String get_marker_act() => this.marker_act;
@@ -31,11 +30,10 @@ class actiivity_provider extends ChangeNotifier {
     notifyListeners();
   }
 
-    void set_date_act(String date_act) {
+  void set_date_act(String date_act) {
     this.date_act = date_act;
     notifyListeners();
   }
-
 
   void set_time_act(String time_act) {
     this.time_act = time_act;
@@ -50,7 +48,8 @@ class actiivity_provider extends ChangeNotifier {
   final httpClient = http.Client();
 
   Future createActivity(Map<String, String> body) async {
-    final Uri restAPIURL = Uri.parse("https://server-api-final-f47d00dcc1f8.herokuapp.com/activity");
+    final Uri restAPIURL = Uri.parse(
+        "https://server-api-final-f47d00dcc1f8.herokuapp.com/activity");
     http.Response response = await httpClient.post(restAPIURL,
         headers: customHeaders, body: jsonEncode(body));
     print(response.statusCode);

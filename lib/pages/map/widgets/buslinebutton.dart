@@ -23,8 +23,10 @@ class Buslinebutton extends StatelessWidget {
         onPressed: () {
           selectedRoute = "route1";
           print(selectedRoute);
+
           Provider.of<ChangeRoute>(context, listen: false)
               .ChangeselectedRoute(selectedRoute);
+          
         },
         backgroundColor: Colors.red,
         child: Icon(MdiIcons.numeric1),
@@ -58,6 +60,7 @@ class Buslinebutton extends StatelessWidget {
         onDisplayChange: (isOpen) {
           if (isOpen) {
             busline_provider_set.set_IsOpend("Yes");
+
             // setState(() {
             //   IsOpened = "Yes";
             // });

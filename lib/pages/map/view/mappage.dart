@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
+import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
 import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,6 +42,8 @@ class _MappageState extends State<Mappage> {
   // Route 2
   Polyline _polylineR2 = const Polyline(polylineId: PolylineId("polylineR2"));
 
+  Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +51,7 @@ class _MappageState extends State<Mappage> {
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
-
+    
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -145,7 +149,6 @@ class _MappageState extends State<Mappage> {
     print(closestMarker);
     // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
     // ...
-
   }
 
   // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
@@ -171,14 +174,84 @@ class _MappageState extends State<Mappage> {
   @override
   Widget build(BuildContext context) {
     final getActivity = context.watch<actiivity_provider>();
-    String selectedRoute = Provider.of<ChangeRoute>(context).route;
+    // String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
 
+    var busline_provider_get = context.watch<Busline_provider>();
+    var busline_provider_set = context.read<Busline_provider>();
+    var itemsActionBar = [
+      FloatingActionButton(
+        shape: CircleBorder(),
+        onPressed: () {
+          setState(() {
+            selectedRoute = "route1";
+            print(selectedRoute);
+            _showClosestMarker();
+            setAllActivity();
+            // get current user information
+            var user = Provider.of<UserProvider>(context, listen: false);
+            print('StudentID: ' + user.user.studentid);
+            Provider.of<actiivity_provider>(context, listen: false)
+                .createActivity(
+              {
+                "studentid": getActivity.get_studentId_act(),
+                "location": getActivity.get_location_act(),
+                "marker": getActivity.get_marker_act(),
+                "data": getActivity.get_date_act(),
+                "time": getActivity.get_time_act(),
+                "route": selectedRoute
+              },
+            );
+          });
+        },
+        backgroundColor: Theme.of(context).primaryColor,
+        child: Icon(MdiIcons.numeric1,color:  Theme.of(context).primaryColorLight),
+      ),
+      FloatingActionButton(
+        shape: CircleBorder(),
+        onPressed: () {
+          setState(() {
+            selectedRoute = "route2";
+            print(selectedRoute);
+            _showClosestMarker();
+            setAllActivity();
+            // get current user information
+            var user = Provider.of<UserProvider>(context, listen: false);
+            print('StudentID: ' + user.user.studentid);
+            Provider.of<actiivity_provider>(context, listen: false)
+                .createActivity(
+              {
+                "studentid": getActivity.get_studentId_act(),
+                "location": getActivity.get_location_act(),
+                "marker": getActivity.get_marker_act(),
+                "data": getActivity.get_date_act(),
+                "time": getActivity.get_time_act(),
+                "route": selectedRoute
+              },
+            );
+          });
+        },
+        backgroundColor: Theme.of(context).primaryColorLight,
+        child: Icon(MdiIcons.numeric2 ,color: Theme.of(context).primaryColor,),
+      ),
+    ];
+
     return Scaffold(
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
+        elevation: 0.0,
+        toolbarHeight: 75,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          )
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Theme.of(context).primaryColorLight,
         automaticallyImplyLeading: false,
         leading: IconButton(
-            color: Colors.red,
+            color:  Theme.of(context).primaryColorLight,
             onPressed: () {
               signOutUser();
             },
@@ -205,35 +278,35 @@ class _MappageState extends State<Mappage> {
             mapType: MapType.normal,
             initialCameraPosition: _kGooglePlex,
             markers: _markers.toSet(),
-            polylines: {selectedRoute == "route2" ? _polylineR2 : _polylineR1},
+            polylines: {selectedRoute == "route2" ? _polylineR2 : selectedRoute == "route1" ? _polylineR1 :_polylineR0 },
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
             }),
-        // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
-        Positioned(
-            bottom: 20,
-            left: 20,
-            child: FloatingActionButton(
-              onPressed: () {
-                _showClosestMarker();
-                setAllActivity();
-                // get current user information
-                var user = Provider.of<UserProvider>(context, listen: false);
-                print('StudentID: ' + user.user.studentid);
-                Provider.of<actiivity_provider>(context, listen: false)
-                    .createActivity(
-                  {
-                    "studentid": getActivity.get_studentId_act(),
-                    "location": getActivity.get_location_act(),
-                    "marker": getActivity.get_marker_act(),
-                    "data": getActivity.get_date_act(),
-                    "time": getActivity.get_time_act(),
-                    "route":selectedRoute
-                  },
-                );
-              },
-              child: const Icon(Icons.search),
-            )),
+        // // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
+        // Positioned(
+        //     bottom: 20,
+        //     left: 20,
+        //     child: FloatingActionButton(
+        //       onPressed: () {
+        //         _showClosestMarker();
+        //         setAllActivity();
+        //         // get current user information
+        //         var user = Provider.of<UserProvider>(context, listen: false);
+        //         print('StudentID: ' + user.user.studentid);
+        //         Provider.of<actiivity_provider>(context, listen: false)
+        //             .createActivity(
+        //           {
+        //             "studentid": getActivity.get_studentId_act(),
+        //             "location": getActivity.get_location_act(),
+        //             "marker": getActivity.get_marker_act(),
+        //             "data": getActivity.get_date_act(),
+        //             "time": getActivity.get_time_act(),
+        //             "route": selectedRoute
+        //           },
+        //         );
+        //       },
+        //       child: const Icon(Icons.search),
+        //     )),
         // แสดง TextOverlay สำหรับแสดงระยะทาง
         Positioned(
           top: 20,
@@ -260,7 +333,38 @@ class _MappageState extends State<Mappage> {
           ),
         ),
       ]),
-      floatingActionButton: Builder(builder: (context) => Buslinebutton()),
+      floatingActionButton: Builder(
+          builder: (context) => FabCircularMenu(
+              key: busline_provider_get.get_fabKey(),
+              alignment: Alignment.bottomCenter,
+              ringColor: Theme.of(context).primaryColorLight,
+              ringDiameter: 200,
+              ringWidth: 0,
+              fabSize: 50.0,
+              fabElevation: 8.0,
+              fabColor: Theme.of(context).primaryColor,
+              fabOpenIcon: Icon(Icons.navigation_rounded,
+                  color: Theme.of(context).primaryColorLight),
+              fabCloseIcon:
+                  Icon(Icons.close, color: Theme.of(context).primaryColorLight),
+              fabMargin: const EdgeInsets.all(20.0),
+              animationDuration: const Duration(milliseconds: 800),
+              animationCurve: Curves.easeInOutCirc,
+              onDisplayChange: (isOpen) {
+                if (isOpen) {
+                  busline_provider_set.set_IsOpend("Yes");
+
+                  // setState(() {
+                  //   IsOpened = "Yes";
+                  // });
+                } else {
+                  busline_provider_set.set_IsOpend("Yes");
+                  // setState(() {
+                  //   IsOpened = "No";
+                  // });
+                }
+              },
+              children: itemsActionBar)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
