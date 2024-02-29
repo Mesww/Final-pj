@@ -9,6 +9,7 @@ import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -23,14 +24,16 @@ class Mappage extends StatefulWidget {
 }
 
 class _MappageState extends State<Mappage> {
+  final directionsApi = DirectionsService();
+
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
   );
-  final Completer<GoogleMapController> _controller = Completer();
+  late GoogleMapController _controller;
   StreamSubscription<Position>? _positionStream;
   String selectedRoute = "";
-  final Set<Marker> _markers = {};
+  // final Set<Marker> _markers = {};
 
   final double _proximityThreshold = 5;
 
@@ -44,14 +47,25 @@ class _MappageState extends State<Mappage> {
 
   Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
 
+  BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
+
+  void _loadcustomMarkerIcon() async {
+    customMarkerIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(),
+      'assets/directions_bus.png', // Provide the path to your custom marker image
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    _markers.addAll(list);
+
+    // _markers.addAll(list);
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
-    
+    _loadcustomMarkerIcon();
+
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -72,11 +86,11 @@ class _MappageState extends State<Mappage> {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
       pointsParam: polylinePointsRoute1,
-      colorParam: Colors.red,
+      colorParam: Color(0xffA23E48),
     );
     _polylineR2 = _polylineR2.copyWith(
       pointsParam: polylinePointsRoute2,
-      colorParam: Colors.green,
+      colorParam: Color(0xffbc9945) ,
     );
   }
 
@@ -114,7 +128,8 @@ class _MappageState extends State<Mappage> {
     position: LatLng(0, 0), // Set default coordinates
   );
 
-  Marker _findClosestMarker() {
+  
+  Marker _findClosestMarker(_markers) {
     double closestDistance = double.infinity;
     for (Marker marker in _markers) {
       double distance = _calculateDistance(marker.position);
@@ -141,19 +156,19 @@ class _MappageState extends State<Mappage> {
 //  ====================================================================================================================================
 
 // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
-  void _showClosestMarker() {
-    _findClosestMarker();
+  void _showClosestMarker(_markers) {
+    _findClosestMarker(_markers);
     _getUserLocation();
-    _getDistanceText();
-    Marker closestMarker = _findClosestMarker();
+    _getDistanceText(_markers);
+    Marker closestMarker = _findClosestMarker(_markers);
     print(closestMarker);
     // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
     // ...
   }
 
   // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
-  String _getDistanceText() {
-    double distance = _calculateDistance(_findClosestMarker().position);
+  String _getDistanceText(_markers) {
+    double distance = _calculateDistance(_findClosestMarker(_markers).position);
     // แปลงค่าระยะทางเป็น String
     String distanceText =
         'คุณห่างจากป้าย ${closestMarker.infoWindow.title} ${distance.toStringAsFixed(0)} ม.';
@@ -161,9 +176,9 @@ class _MappageState extends State<Mappage> {
   }
 
   //คำนวนเวลา
-  String _getTimeText() {
+  String _getTimeText(_markers) {
     //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
-    closestMarker = _findClosestMarker();
+    closestMarker = _findClosestMarker(_markers);
     double distanceTime = _calculateDistance(closestMarker.position);
     double speed = 40.0; // กม./ชม. (ค่าประมาณ)
     double time = distanceTime / speed;
@@ -171,8 +186,143 @@ class _MappageState extends State<Mappage> {
     return distanceTimeText;
   }
 
+  // เซ็ต camera ไปที่ location ของ user
+  void _goToMyLocation() async {
+    _getUserLocation();
+    // Animate camera to user's location
+    _controller.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        target: LatLng(_userLocation.latitude, _userLocation.longitude),
+        zoom: 17.0,
+      ),
+    ));
+  }
+
+  void _zoomIn() {
+    _controller.animateCamera(
+        CameraUpdate.zoomTo(_kGooglePlex.zoom + 1)); // Increase zoom by 1
+  }
+
+  void _zoomOut() {
+    _controller.animateCamera(
+        CameraUpdate.zoomTo(_kGooglePlex.zoom - 1)); // Decrease zoom by 1
+  }
+
   @override
   Widget build(BuildContext context) {
+    // ! ต้องเอาmarkersไว้ใน build ในการทำ custom icon
+    final List<Marker> _markers = [
+      Marker(
+          markerId: MarkerId('1'),
+          position: LatLng(20.05884362541219, 99.89840388818074),
+          infoWindow: InfoWindow(title: '1'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('2'),
+          position: LatLng(20.05709734818155, 99.89694381071735),
+          infoWindow: InfoWindow(title: '2'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('3'),
+          position: LatLng(20.054714358618483, 99.89456736656254),
+          infoWindow: InfoWindow(title: '3'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('4'),
+          position: LatLng(20.052565215511244, 99.89231798713149),
+          infoWindow: InfoWindow(title: '4'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('5'),
+          position: LatLng(20.050816843021277, 99.89121969349162),
+          infoWindow: InfoWindow(title: '5'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('6'),
+          position: LatLng(20.049137353450433, 99.891250485570452),
+          infoWindow: InfoWindow(title: '6'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('7'),
+          position: LatLng(20.048397671997282, 99.89320068812843),
+          infoWindow: InfoWindow(title: '7'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('8'),
+          position: LatLng(20.047264832318994, 99.89314563095694),
+          infoWindow: InfoWindow(title: '8'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('9'),
+          position: LatLng(20.045737111535473, 99.89152205304603),
+          infoWindow: InfoWindow(title: '9'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('10'),
+          position: LatLng(20.043881444753783, 99.89348617576454),
+          infoWindow: InfoWindow(title: '10'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('11'),
+          position: LatLng(20.043919609786567, 99.89490923095694),
+          infoWindow: InfoWindow(title: '11'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('12'),
+          position: LatLng(20.043311336533844, 99.89529707515575),
+          infoWindow: InfoWindow(title: '12'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('13'),
+          position: LatLng(20.043845538331563, 99.8934754469289),
+          infoWindow: InfoWindow(title: '13'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('14'),
+          position: LatLng(20.045659393241642, 99.89133178188165),
+          infoWindow: InfoWindow(title: '14'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('15'),
+          position: LatLng(20.049391118491396, 99.89111283095696),
+          infoWindow: InfoWindow(title: '15'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('16'),
+          position: LatLng(20.05083048583872, 99.89115650886787),
+          infoWindow: InfoWindow(title: '16'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('17'),
+          position: LatLng(20.052689636083315, 99.89234180090831),
+          infoWindow: InfoWindow(title: '17'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('18'),
+          position: LatLng(20.05473222049373, 99.89448019896511),
+          infoWindow: InfoWindow(title: '18'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('19'),
+          position: LatLng(20.056897650552507, 99.89711855304603),
+          infoWindow: InfoWindow(title: '19'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('20'),
+          position: LatLng(20.05806378447924, 99.89787541746388),
+          infoWindow: InfoWindow(title: '20'),
+          icon: customMarkerIcon),
+      Marker(
+          markerId: MarkerId('21'),
+          position: LatLng(20.058966957817436, 99.8995173298247),
+          infoWindow: InfoWindow(title: '21'),
+          icon: customMarkerIcon),
+    ];
+
+    // _marker[0].icon = customMarkerIcon;
+
+    
+
     final getActivity = context.watch<actiivity_provider>();
     // String selectedRoute = Provider.of<ChangeRoute>(context).route;
     Size size = MediaQuery.of(context).size;
@@ -186,7 +336,7 @@ class _MappageState extends State<Mappage> {
           setState(() {
             selectedRoute = "route1";
             print(selectedRoute);
-            _showClosestMarker();
+            _showClosestMarker(_markers);
             setAllActivity();
             // get current user information
             var user = Provider.of<UserProvider>(context, listen: false);
@@ -205,7 +355,8 @@ class _MappageState extends State<Mappage> {
           });
         },
         backgroundColor: Theme.of(context).primaryColor,
-        child: Icon(MdiIcons.numeric1,color:  Theme.of(context).primaryColorLight),
+        child:
+            Icon(MdiIcons.numeric1, color: Theme.of(context).primaryColorLight),
       ),
       FloatingActionButton(
         shape: CircleBorder(),
@@ -213,7 +364,7 @@ class _MappageState extends State<Mappage> {
           setState(() {
             selectedRoute = "route2";
             print(selectedRoute);
-            _showClosestMarker();
+            _showClosestMarker(_markers);
             setAllActivity();
             // get current user information
             var user = Provider.of<UserProvider>(context, listen: false);
@@ -232,26 +383,28 @@ class _MappageState extends State<Mappage> {
           });
         },
         backgroundColor: Theme.of(context).primaryColorLight,
-        child: Icon(MdiIcons.numeric2 ,color: Theme.of(context).primaryColor,),
+        child: Icon(
+          MdiIcons.numeric2,
+          color: Theme.of(context).primaryColor,
+        ),
       ),
     ];
 
     return Scaffold(
-      extendBodyBehindAppBar: false,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         elevation: 0.0,
-        toolbarHeight: 75,
+        toolbarHeight: 60,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          )
-        ),
+            borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        )),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Theme.of(context).primaryColorLight,
         automaticallyImplyLeading: false,
         leading: IconButton(
-            color:  Theme.of(context).primaryColorLight,
+            color: Theme.of(context).primaryColorLight,
             onPressed: () {
               signOutUser();
             },
@@ -264,8 +417,10 @@ class _MappageState extends State<Mappage> {
               children: [
                 if (selectedRoute == "route2")
                   const Text("Route 2 Hospital")
+                else if (selectedRoute == "route1")
+                  const Text("Route 1 C5")
                 else
-                  const Text("Route 1 C5"),
+                  const Text(""),
               ],
             )
           ],
@@ -273,63 +428,75 @@ class _MappageState extends State<Mappage> {
       ),
       body: Stack(children: <Widget>[
         GoogleMap(
+            zoomControlsEnabled: false,
             myLocationEnabled: true,
-            myLocationButtonEnabled: true,
             mapType: MapType.normal,
             initialCameraPosition: _kGooglePlex,
             markers: _markers.toSet(),
-            polylines: {selectedRoute == "route2" ? _polylineR2 : selectedRoute == "route1" ? _polylineR1 :_polylineR0 },
+            polylines: {
+              selectedRoute == "route2"
+                  ? _polylineR2
+                  : selectedRoute == "route1"
+                      ? _polylineR1
+                      : _polylineR0
+            },
             onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
+              _controller = controller;
             }),
-        // // แสดงปุ่มสำหรับค้นหา Marker ที่อยู่ใกล้ Location ของ User
-        // Positioned(
-        //     bottom: 20,
-        //     left: 20,
-        //     child: FloatingActionButton(
-        //       onPressed: () {
-        //         _showClosestMarker();
-        //         setAllActivity();
-        //         // get current user information
-        //         var user = Provider.of<UserProvider>(context, listen: false);
-        //         print('StudentID: ' + user.user.studentid);
-        //         Provider.of<actiivity_provider>(context, listen: false)
-        //             .createActivity(
-        //           {
-        //             "studentid": getActivity.get_studentId_act(),
-        //             "location": getActivity.get_location_act(),
-        //             "marker": getActivity.get_marker_act(),
-        //             "data": getActivity.get_date_act(),
-        //             "time": getActivity.get_time_act(),
-        //             "route": selectedRoute
-        //           },
-        //         );
-        //       },
-        //       child: const Icon(Icons.search),
-        //     )),
-        // แสดง TextOverlay สำหรับแสดงระยะทาง
         Positioned(
-          top: 20,
+          top: 100,
           left: 20,
           child: SizedBox(
             width: 250,
             height: 30,
             child: Text(
               // แสดงค่าระยะทาง
-              _getDistanceText(),
+              _getDistanceText(_markers),
             ),
           ),
         ),
         Positioned(
-          top: 39,
+          top: 120,
           left: 20,
           child: SizedBox(
             width: 250,
             height: 30,
             child: Text(
               // แสดงค่าเวลา
-              _getTimeText(),
+              _getTimeText(_markers),
             ),
+          ),
+        ),
+        Positioned(
+          top: 100.0,
+          right: 20.0,
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _goToMyLocation,
+                child: Icon(
+                  MdiIcons.compass,
+                  size: 40,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              GestureDetector(
+                onTap: _zoomIn,
+                child: Icon(
+                  MdiIcons.plusCircle,
+                  size: 40,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+              GestureDetector(
+                onTap: _zoomOut,
+                child: Icon(
+                  MdiIcons.minusCircle,
+                  size: 40,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ],
           ),
         ),
       ]),
