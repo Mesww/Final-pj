@@ -1,19 +1,15 @@
 import 'dart:async';
-
-import 'package:final_pj/pages/login/login.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
-import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'package:final_pj/pages/map/widgets/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Mappage extends StatefulWidget {
   Mappage({
@@ -25,7 +21,7 @@ class Mappage extends StatefulWidget {
 
 class _MappageState extends State<Mappage> {
   final directionsApi = DirectionsService();
-
+  late LatLng selectedMarker;
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
@@ -33,12 +29,13 @@ class _MappageState extends State<Mappage> {
   late GoogleMapController _controller;
   StreamSubscription<Position>? _positionStream;
   String selectedRoute = "";
-  // final Set<Marker> _markers = {};
+  bool _isShow = true;
 
   final double _proximityThreshold = 5;
 
   // กำหนด State สำหรับ Location ของ User
-  late LatLng _userLocation = LatLng(20.050236851378024, 99.89456487892942);
+  late LatLng _userLocation =
+      const LatLng(20.050236851378024, 99.89456487892942);
 
 // Route 1
   Polyline _polylineR1 = const Polyline(polylineId: PolylineId("polylineR1"));
@@ -59,7 +56,6 @@ class _MappageState extends State<Mappage> {
   @override
   void initState() {
     super.initState();
-
     // _markers.addAll(list);
     _setPolylinePoints();
     _requestLocationPermission();
@@ -86,11 +82,11 @@ class _MappageState extends State<Mappage> {
     //Import form const.dart
     _polylineR1 = _polylineR1.copyWith(
       pointsParam: polylinePointsRoute1,
-      colorParam: Color(0xffA23E48),
+      colorParam: const Color(0xffA23E48),
     );
     _polylineR2 = _polylineR2.copyWith(
       pointsParam: polylinePointsRoute2,
-      colorParam: Color(0xffbc9945) ,
+      colorParam: const Color(0xffbc9945),
     );
   }
 
@@ -128,7 +124,6 @@ class _MappageState extends State<Mappage> {
     position: LatLng(0, 0), // Set default coordinates
   );
 
-  
   Marker _findClosestMarker(_markers) {
     double closestDistance = double.infinity;
     for (Marker marker in _markers) {
@@ -208,134 +203,157 @@ class _MappageState extends State<Mappage> {
         CameraUpdate.zoomTo(_kGooglePlex.zoom - 1)); // Decrease zoom by 1
   }
 
+  void _zoomInMaker(LatLng position) {
+    print(position);
+    _controller.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        target: position,
+        zoom: 17.0,
+      ),
+    )); // Increase zoom by 1
+  }
+
+  late List mark;
   @override
   Widget build(BuildContext context) {
     // ! ต้องเอาmarkersไว้ใน build ในการทำ custom icon
-    final List<Marker> _markers = [
+    List<Marker> _markers = [
       Marker(
-          markerId: MarkerId('1'),
-          position: LatLng(20.05884362541219, 99.89840388818074),
-          infoWindow: InfoWindow(title: '1'),
+          markerId: const MarkerId('1'),
+          position: const LatLng(20.05884362541219, 99.89840388818074),
+          infoWindow: const InfoWindow(title: '1'),
+          icon: customMarkerIcon,
+          onTap: () {
+            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);
+            _zoomInMaker(selectedMarker);
+          }),
+      Marker(
+          markerId: const MarkerId('2'),
+          position: const LatLng(20.05709734818155, 99.89694381071735),
+          infoWindow: const InfoWindow(title: '2'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('2'),
-          position: LatLng(20.05709734818155, 99.89694381071735),
-          infoWindow: InfoWindow(title: '2'),
+          markerId: const MarkerId('3'),
+          position: const LatLng(20.054714358618483, 99.89456736656254),
+          infoWindow: const InfoWindow(title: '3'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('3'),
-          position: LatLng(20.054714358618483, 99.89456736656254),
-          infoWindow: InfoWindow(title: '3'),
+          markerId: const MarkerId('4'),
+          position: const LatLng(20.052565215511244, 99.89231798713149),
+          infoWindow: const InfoWindow(title: '4'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('4'),
-          position: LatLng(20.052565215511244, 99.89231798713149),
-          infoWindow: InfoWindow(title: '4'),
+          markerId: const MarkerId('5'),
+          position: const LatLng(20.050816843021277, 99.89121969349162),
+          infoWindow: const InfoWindow(title: '5'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('5'),
-          position: LatLng(20.050816843021277, 99.89121969349162),
-          infoWindow: InfoWindow(title: '5'),
+          markerId: const MarkerId('6'),
+          position: const LatLng(20.049137353450433, 99.891250485570452),
+          infoWindow: const InfoWindow(title: '6'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('6'),
-          position: LatLng(20.049137353450433, 99.891250485570452),
-          infoWindow: InfoWindow(title: '6'),
+          markerId: const MarkerId('7'),
+          position: const LatLng(20.048397671997282, 99.89320068812843),
+          infoWindow: const InfoWindow(title: '7'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('7'),
-          position: LatLng(20.048397671997282, 99.89320068812843),
-          infoWindow: InfoWindow(title: '7'),
+          markerId: const MarkerId('8'),
+          position: const LatLng(20.047264832318994, 99.89314563095694),
+          infoWindow: const InfoWindow(title: '8'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('8'),
-          position: LatLng(20.047264832318994, 99.89314563095694),
-          infoWindow: InfoWindow(title: '8'),
+          markerId: const MarkerId('9'),
+          position: const LatLng(20.045737111535473, 99.89152205304603),
+          infoWindow: const InfoWindow(title: '9'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('9'),
-          position: LatLng(20.045737111535473, 99.89152205304603),
-          infoWindow: InfoWindow(title: '9'),
+          markerId: const MarkerId('10'),
+          position: const LatLng(20.043881444753783, 99.89348617576454),
+          infoWindow: const InfoWindow(title: '10'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('10'),
-          position: LatLng(20.043881444753783, 99.89348617576454),
-          infoWindow: InfoWindow(title: '10'),
+          markerId: const MarkerId('11'),
+          position: const LatLng(20.043919609786567, 99.89490923095694),
+          infoWindow: const InfoWindow(title: '11'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('11'),
-          position: LatLng(20.043919609786567, 99.89490923095694),
-          infoWindow: InfoWindow(title: '11'),
+          markerId: const MarkerId('12'),
+          position: const LatLng(20.043311336533844, 99.89529707515575),
+          infoWindow: const InfoWindow(title: '12'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('12'),
-          position: LatLng(20.043311336533844, 99.89529707515575),
-          infoWindow: InfoWindow(title: '12'),
+          markerId: const MarkerId('13'),
+          position: const LatLng(20.043845538331563, 99.8934754469289),
+          infoWindow: const InfoWindow(title: '13'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('13'),
-          position: LatLng(20.043845538331563, 99.8934754469289),
-          infoWindow: InfoWindow(title: '13'),
+          markerId: const MarkerId('14'),
+          position: const LatLng(20.045659393241642, 99.89133178188165),
+          infoWindow: const InfoWindow(title: '14'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('14'),
-          position: LatLng(20.045659393241642, 99.89133178188165),
-          infoWindow: InfoWindow(title: '14'),
+          markerId: const MarkerId('15'),
+          position: const LatLng(20.049391118491396, 99.89111283095696),
+          infoWindow: const InfoWindow(title: '15'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('15'),
-          position: LatLng(20.049391118491396, 99.89111283095696),
-          infoWindow: InfoWindow(title: '15'),
+          markerId: const MarkerId('16'),
+          position: const LatLng(20.05083048583872, 99.89115650886787),
+          infoWindow: const InfoWindow(title: '16'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('16'),
-          position: LatLng(20.05083048583872, 99.89115650886787),
-          infoWindow: InfoWindow(title: '16'),
+          markerId: const MarkerId('17'),
+          position: const LatLng(20.052689636083315, 99.89234180090831),
+          infoWindow: const InfoWindow(title: '17'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('17'),
-          position: LatLng(20.052689636083315, 99.89234180090831),
-          infoWindow: InfoWindow(title: '17'),
+          markerId: const MarkerId('18'),
+          position: const LatLng(20.05473222049373, 99.89448019896511),
+          infoWindow: const InfoWindow(title: '18'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('18'),
-          position: LatLng(20.05473222049373, 99.89448019896511),
-          infoWindow: InfoWindow(title: '18'),
+          markerId: const MarkerId('19'),
+          position: const LatLng(20.056897650552507, 99.89711855304603),
+          infoWindow: const InfoWindow(title: '19'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('19'),
-          position: LatLng(20.056897650552507, 99.89711855304603),
-          infoWindow: InfoWindow(title: '19'),
+          markerId: const MarkerId('20'),
+          position: const LatLng(20.05806378447924, 99.89787541746388),
+          infoWindow: const InfoWindow(title: '20'),
           icon: customMarkerIcon),
       Marker(
-          markerId: MarkerId('20'),
-          position: LatLng(20.05806378447924, 99.89787541746388),
-          infoWindow: InfoWindow(title: '20'),
-          icon: customMarkerIcon),
-      Marker(
-          markerId: MarkerId('21'),
-          position: LatLng(20.058966957817436, 99.8995173298247),
-          infoWindow: InfoWindow(title: '21'),
+          markerId: const MarkerId('21'),
+          position: const LatLng(20.058966957817436, 99.8995173298247),
+          infoWindow: const InfoWindow(title: '21'),
           icon: customMarkerIcon),
     ];
 
+    void MarkerLoop() {
+      for (var i = 0; i < 20; i++) {
+        if (_markers[i].position == selectedMarker) {
+          print(
+              "================================================================");
+          print(_markers[i]);
+          print(selectedMarker);
+          print(
+              "================================================================");
+        }
+      }
+    }
+
     // _marker[0].icon = customMarkerIcon;
-
-    
-
     final getActivity = context.watch<actiivity_provider>();
     // String selectedRoute = Provider.of<ChangeRoute>(context).route;
-    Size size = MediaQuery.of(context).size;
-
     var busline_provider_get = context.watch<Busline_provider>();
     var busline_provider_set = context.read<Busline_provider>();
     var itemsActionBar = [
       FloatingActionButton(
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
         onPressed: () {
           setState(() {
             selectedRoute = "route1";
-            print(selectedRoute);
+            MarkerLoop();
             _showClosestMarker(_markers);
             setAllActivity();
             // get current user information
@@ -359,7 +377,7 @@ class _MappageState extends State<Mappage> {
             Icon(MdiIcons.numeric1, color: Theme.of(context).primaryColorLight),
       ),
       FloatingActionButton(
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
         onPressed: () {
           setState(() {
             selectedRoute = "route2";
@@ -395,7 +413,7 @@ class _MappageState extends State<Mappage> {
       appBar: AppBar(
         elevation: 0.0,
         toolbarHeight: 60,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -428,44 +446,70 @@ class _MappageState extends State<Mappage> {
       ),
       body: Stack(children: <Widget>[
         GoogleMap(
-            zoomControlsEnabled: false,
-            myLocationEnabled: true,
-            mapType: MapType.normal,
-            initialCameraPosition: _kGooglePlex,
-            markers: _markers.toSet(),
-            polylines: {
-              selectedRoute == "route2"
-                  ? _polylineR2
-                  : selectedRoute == "route1"
-                      ? _polylineR1
-                      : _polylineR0
-            },
-            onMapCreated: (GoogleMapController controller) {
-              _controller = controller;
-            }),
+          zoomControlsEnabled: false,
+          myLocationEnabled: true,
+          mapType: MapType.normal,
+          initialCameraPosition: _kGooglePlex,
+          markers: _markers.toSet(),
+          polylines: {
+            selectedRoute == "route2"
+                ? _polylineR2
+                : selectedRoute == "route1"
+                    ? _polylineR1
+                    : _polylineR0
+          },
+          onMapCreated: (GoogleMapController controller) {
+            _controller = controller;
+          },
+        ),
+        Positioned(
+            top: 90,
+            left: 8,
+            child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    _isShow = !_isShow;
+                  });
+                },
+                icon: Icon(Icons.navigate_next_outlined))),
         Positioned(
           top: 100,
           left: 20,
-          child: SizedBox(
-            width: 250,
-            height: 30,
-            child: Text(
-              // แสดงค่าระยะทาง
-              _getDistanceText(_markers),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 120,
-          left: 20,
-          child: SizedBox(
-            width: 250,
-            height: 30,
-            child: Text(
-              // แสดงค่าเวลา
-              _getTimeText(_markers),
-            ),
-          ),
+          child: Visibility(
+              visible: _isShow,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              child: Container(
+                width: 300,
+                height: 80,
+                color: Colors.amber,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            children: [
+                              Text(_getDistanceText(_markers)),
+                              Text(_getTimeText(_markers))
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isShow = !_isShow;
+                              });
+                            },
+                            icon: Icon(Icons.navigate_before_rounded))
+                      ],
+                    ),
+                  ],
+                ),
+              )),
         ),
         Positioned(
           top: 100.0,
