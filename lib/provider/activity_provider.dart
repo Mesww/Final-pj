@@ -49,7 +49,7 @@ class actiivity_provider extends ChangeNotifier {
 
   Future createActivity(Map<String, String> body) async {
     final Uri restAPIURL =
-        Uri.parse("https://senior-project-415215.as.r.appspot.com/activity");
+        Uri.parse("http://34.142.166.177/activity");
     http.Response response = await httpClient.post(restAPIURL,
         headers: customHeaders, body: jsonEncode(body));
     print(response.statusCode);
