@@ -48,8 +48,8 @@ class actiivity_provider extends ChangeNotifier {
   final httpClient = http.Client();
 
   Future createActivity(Map<String, String> body) async {
-    final Uri restAPIURL = Uri.parse(
-        "https://server-api-final-f47d00dcc1f8.herokuapp.com/activity");
+    final Uri restAPIURL =
+        Uri.parse("https://senior-project-415215.as.r.appspot.com/activity");
     http.Response response = await httpClient.post(restAPIURL,
         headers: customHeaders, body: jsonEncode(body));
     print(response.statusCode);
