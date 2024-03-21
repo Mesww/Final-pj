@@ -1,7 +1,11 @@
+import 'package:final_pj/Map.dart';
+import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
-
-import 'pages/home/home.dart';
-
+import 'package:final_pj/config/pallete.dart';
+// import 'pages/map/map.dart';
+import 'package:final_pj/provider/provider.dart';
+import 'package:provider/provider.dart';
+import 'package:final_pj/pages/home/view/homepage.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -19,7 +23,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         
       ),
-      home: const Homepage(),
+      home: const MapSample(),
     );
   }
 }
