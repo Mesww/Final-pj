@@ -1,4 +1,5 @@
 import 'package:final_pj/pages/login/login.dart';
+import 'package:final_pj/provider/fetch_api_gem.dart';
 import 'package:final_pj/provider/user.provider.dart';
 // import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
@@ -20,7 +21,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
     ],
-    child: const MyApp(),
+    child: const MyApps(),
   ));
 }
 
