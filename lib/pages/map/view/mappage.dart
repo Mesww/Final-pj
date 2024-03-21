@@ -19,7 +19,7 @@ class Mappage extends StatefulWidget {
   State<Mappage> createState() => _MappageState();
 }
 
-class _MappageState extends State<Mappage> {
+class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
   final directionsApi = DirectionsService();
   late LatLng selectedMarker;
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -71,10 +71,10 @@ class _MappageState extends State<Mappage> {
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _positionStream?.cancel(); // Cancel the stream subscription
+  void _toggleVisibility() {
+    setState(() {
+      _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
+    });
   }
 
   //ลากเส้นทาง
@@ -164,9 +164,9 @@ class _MappageState extends State<Mappage> {
   // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
     double distance = _calculateDistance(_findClosestMarker(_markers).position);
-    // แปลงค่าระยะทางเป็น String
+    double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
     String distanceText =
-        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} ${distance.toStringAsFixed(0)} ม.';
+        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
     return distanceText;
   }
 
@@ -175,7 +175,7 @@ class _MappageState extends State<Mappage> {
     //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
     closestMarker = _findClosestMarker(_markers);
     double distanceTime = _calculateDistance(closestMarker.position);
-    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
+    double speed = 30.0; // กม./ชม. (ค่าประมาณ)
     double time = distanceTime / speed;
     String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
     return distanceTimeText;
@@ -351,6 +351,7 @@ class _MappageState extends State<Mappage> {
       FloatingActionButton(
         shape: const CircleBorder(),
         onPressed: () {
+          _toggleVisibility();
           setState(() {
             selectedRoute = "route1";
             MarkerLoop();
@@ -359,6 +360,10 @@ class _MappageState extends State<Mappage> {
             // get current user information
             var user = Provider.of<UserProvider>(context, listen: false);
             print('StudentID: ' + user.user.studentid);
+            context.read<ChangeRoute>();
+            void changeRoute(String route) {
+              // Add your implementation here
+            }
             Provider.of<actiivity_provider>(context, listen: false)
                 .createActivity(
               {
@@ -379,6 +384,7 @@ class _MappageState extends State<Mappage> {
       FloatingActionButton(
         shape: const CircleBorder(),
         onPressed: () {
+          _toggleVisibility();
           setState(() {
             selectedRoute = "route2";
             print(selectedRoute);
@@ -387,6 +393,12 @@ class _MappageState extends State<Mappage> {
             // get current user information
             var user = Provider.of<UserProvider>(context, listen: false);
             print('StudentID: ' + user.user.studentid);
+            context.read<ChangeRoute>();
+            void changeRoute(String route) {
+              // Add your implementation here
+            }
+
+            changeRoute("route2"); // เปลี่ยน route ใหม่
             Provider.of<actiivity_provider>(context, listen: false)
                 .createActivity(
               {
@@ -463,53 +475,50 @@ class _MappageState extends State<Mappage> {
           },
         ),
         Positioned(
-            top: 90,
-            left: 8,
-            child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isShow = !_isShow;
-                  });
-                },
-                icon: Icon(Icons.navigate_next_outlined))),
-        Positioned(
-          top: 100,
-          left: 20,
-          child: Visibility(
-              visible: _isShow,
-              maintainSize: true,
-              maintainAnimation: true,
-              maintainState: true,
-              child: Container(
-                width: 300,
-                height: 80,
-                color: Colors.amber,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            children: [
-                              Text(_getDistanceText(_markers)),
-                              Text(_getTimeText(_markers))
-                            ],
+          top: 90,
+          left: 8,
+          child: IconButton(
+            onPressed: () {
+              _toggleVisibility();
+              showModalBottomSheet<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  return SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            _getDistanceText(_markers),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _isShow = !_isShow;
-                              });
-                            },
-                            icon: Icon(Icons.navigate_before_rounded))
-                      ],
+                          SizedBox(height: 5),
+                          Text(
+                            _getTimeText(_markers),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // IconButton(
+                          //   onPressed: () => Navigator.pop(context),
+                          //   icon: Icon(Icons
+                          //       .close), // เปลี่ยนไอคอนเป็น close หรือไอคอนที่คุณต้องการ
+                          // ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              )),
+                  );
+                },
+              );
+            },
+            icon: Icon(Icons.car_crash_rounded), // เปลี่ยนไอคอนที่นี่
+          ),
         ),
         Positioned(
           top: 100.0,

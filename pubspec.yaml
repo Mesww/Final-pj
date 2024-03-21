@@ -44,9 +44,6 @@ dependencies:
   material_floating_search_bar_2: ^0.5.0
   mongo_dart: ^0.10.0
   http: ^1.2.0
-<<<<<<< HEAD
-  location: ^5.0.3
-=======
   simple_animations: ^5.0.2
   form_validator: ^2.1.1
   quickalert: ^1.0.2
@@ -54,7 +51,6 @@ dependencies:
   geolocator: ^11.0.0
   google_directions_api: ^0.10.0
   flutter_polyline_points: ^2.0.0
->>>>>>> c2223a6703e1f8bba4d04338b89ef5bd006c00b5
 
 dev_dependencies:
   flutter_test:
