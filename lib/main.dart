@@ -21,7 +21,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
     ],
-    child: const MyApps(),
+    child: MyApps(),
   ));
 }
 
