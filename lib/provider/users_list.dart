@@ -25,9 +25,8 @@ class usersProvider extends ChangeNotifier {
   Future addData(Map<String, String> body) async {
     final Uri restAPIURL =
         Uri.parse("https://senior-pj-fb736225a696.herokuapp.com/add");
-
-    http.Response response = await httpClient.post(restAPIURL,
-        headers: customHeaders, body: jsonEncode(body));
+      http.Response response = await httpClient.post(restAPIURL,
+          headers: customHeaders, body: jsonEncode(body));
     return response.body;
   }
 

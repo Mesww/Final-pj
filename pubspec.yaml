@@ -44,6 +44,17 @@ dependencies:
   material_floating_search_bar_2: ^0.5.0
   mongo_dart: ^0.10.0
   http: ^1.2.0
+<<<<<<< HEAD
+  location: ^5.0.3
+=======
+  simple_animations: ^5.0.2
+  form_validator: ^2.1.1
+  quickalert: ^1.0.2
+  shared_preferences: ^2.2.2
+  geolocator: ^11.0.0
+  google_directions_api: ^0.10.0
+  flutter_polyline_points: ^2.0.0
+>>>>>>> c2223a6703e1f8bba4d04338b89ef5bd006c00b5
 
 dev_dependencies:
   flutter_test:
@@ -68,8 +79,10 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/Mae-Fah-Luang-University-2-768x779.png
+    - assets/bus.png
+    - assets/directions_bus.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
