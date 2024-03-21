@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class Mappage extends StatefulWidget {
@@ -21,7 +22,7 @@ class Mappage extends StatefulWidget {
 
 class _MappageState extends State<Mappage> {
   final directionsApi = DirectionsService();
-  late LatLng selectedMarker;
+  LatLng selectedMarker = const LatLng(0, 0);
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
@@ -48,8 +49,8 @@ class _MappageState extends State<Mappage> {
 
   void _loadcustomMarkerIcon() async {
     customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(),
-      'assets/directions_bus.png', // Provide the path to your custom marker image
+      ImageConfiguration(),
+      'assets/Picon5.png', // Provide the path to your custom marker image
     );
   }
 
@@ -61,6 +62,7 @@ class _MappageState extends State<Mappage> {
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
+    checkPermission(Permission.location, context);
 
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
@@ -147,6 +149,7 @@ class _MappageState extends State<Mappage> {
     setActivity.set_location_act("${closestMarker.position}");
     setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
     setActivity.set_time_act("${now}");
+    print(now);
   }
 //  ====================================================================================================================================
 
@@ -175,9 +178,11 @@ class _MappageState extends State<Mappage> {
     //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
     closestMarker = _findClosestMarker(_markers);
     double distanceTime = _calculateDistance(closestMarker.position);
-    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
-    double time = distanceTime / speed;
-    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
+    double speedkmph = 40; // กม./ชม. (ค่าประมาณ)
+    double speedinms = 0.277778 * speedkmph; //แปลงจาก กม เป็น เมตร ต่อ วินาที
+    double time = distanceTime / speedinms;
+    String distanceTimeText =
+        'จะถึงป้ายในอีก ${time.toStringAsFixed(0)} วินาที.';
     return distanceTimeText;
   }
 
@@ -203,14 +208,44 @@ class _MappageState extends State<Mappage> {
         CameraUpdate.zoomTo(_kGooglePlex.zoom - 1)); // Decrease zoom by 1
   }
 
-  void _zoomInMaker(LatLng position) {
+  void _zoomInMaker(LatLng position) async {
     print(position);
-    _controller.animateCamera(CameraUpdate.newCameraPosition(
+    await _controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
         target: position,
         zoom: 17.0,
       ),
     )); // Increase zoom by 1
+  }
+
+  // check Permission ===========================
+  Future<void> checkPermission(
+      Permission permission, BuildContext context) async {
+    showAlertDialog(context) => showCupertinoDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => CupertinoAlertDialog(
+            title: const Text('Permission Denied'),
+            content: const Text('Allow access to your location'),
+            actions: <CupertinoDialogAction>[
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => openAppSettings(),
+                child: const Text('Settings'),
+              ),
+            ],
+          ),
+        );
+    final status = await permission.request();
+    if (status.isDenied) {
+      showAlertDialog(context);
+    } else {
+      print('Exception occured!');
+    }
   }
 
   late List mark;
