@@ -1,4 +1,5 @@
 import 'package:final_pj/pages/login/login.dart';
+import 'package:final_pj/provider/busLocation.dart';
 import 'package:final_pj/provider/user.provider.dart';
 // import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
@@ -19,6 +20,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => ChangeRoute()),
       ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
+      ChangeNotifierProvider(create: (_) => busLocation()),
     ],
     child: const MyApp(),
   ));

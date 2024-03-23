@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
+import 'package:final_pj/provider/busLocation.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -53,6 +54,7 @@ class _MappageState extends State<Mappage> {
       'assets/Picon5.png', // Provide the path to your custom marker image
     );
   }
+
 
   @override
   void initState() {
@@ -241,9 +243,9 @@ class _MappageState extends State<Mappage> {
           ),
         );
     final status = await permission.request();
-    if (status.isDenied) {
-      showAlertDialog(context);
+    if (status.isGranted) {
     } else {
+      showAlertDialog(context);
       print('Exception occured!');
     }
   }
@@ -387,6 +389,7 @@ class _MappageState extends State<Mappage> {
         shape: const CircleBorder(),
         onPressed: () {
           setState(() {
+
             selectedRoute = "route1";
             MarkerLoop();
             _showClosestMarker(_markers);
@@ -497,6 +500,7 @@ class _MappageState extends State<Mappage> {
             _controller = controller;
           },
         ),
+     
         Positioned(
             top: 90,
             left: 8,
