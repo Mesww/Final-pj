@@ -34,7 +34,7 @@ class _MappageState extends State<Mappage> {
   bool _isShow = true;
 
   final double _proximityThreshold = 5;
-
+  List<Marker> _markers = [];
   // กำหนด State สำหรับ Location ของ User
   late LatLng _userLocation =
       const LatLng(20.050236851378024, 99.89456487892942);
@@ -55,17 +55,43 @@ class _MappageState extends State<Mappage> {
     );
   }
 
+  List<Marker> BusMarker = [];
+  List<Bus> buses = [];
+  void loadBus() async {
+    try {
+      List<Bus> buses =
+          await Provider.of<busLocation>(context, listen: false).fetchBus();
+      for (Bus bus in buses) {
+        final String? busLatLng = bus.position;
+        List<String> latLngParts = busLatLng!.split(",");
+        double busLat = double.parse(latLngParts[0]);
+        double busLng = double.parse(latLngParts[1]);
+        final marker = Marker(
+          markerId: MarkerId('bus_${bus.id}'), // Unique ID for each marker
+          position: LatLng(busLat, busLng),
+          infoWindow: InfoWindow(
+            title: 'Bus ${bus.id}', // Display bus ID in info window
+          ),
+        );
+        // Add the marker to the busMarkers list
+        BusMarker.add(marker);
+        print('${busLat} ${busLng}');
+      }
+    } catch (error) {
+      print('Error fetching buses: $error');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // _markers.addAll(list);
+    loadBus();
+    // BusMarker.addAll(list);
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
     checkPermission(Permission.location, context);
-
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -249,7 +275,6 @@ class _MappageState extends State<Mappage> {
       print('Exception occured!');
     }
   }
-
   late List mark;
   @override
   Widget build(BuildContext context) {
@@ -365,7 +390,6 @@ class _MappageState extends State<Mappage> {
           infoWindow: const InfoWindow(title: '21'),
           icon: customMarkerIcon),
     ];
-
     void MarkerLoop() {
       for (var i = 0; i < 20; i++) {
         if (_markers[i].position == selectedMarker) {
@@ -389,7 +413,6 @@ class _MappageState extends State<Mappage> {
         shape: const CircleBorder(),
         onPressed: () {
           setState(() {
-
             selectedRoute = "route1";
             MarkerLoop();
             _showClosestMarker(_markers);
@@ -488,7 +511,7 @@ class _MappageState extends State<Mappage> {
           myLocationEnabled: true,
           mapType: MapType.normal,
           initialCameraPosition: _kGooglePlex,
-          markers: _markers.toSet(),
+          markers:[..._markers, ...BusMarker].toSet(),
           polylines: {
             selectedRoute == "route2"
                 ? _polylineR2
@@ -500,7 +523,6 @@ class _MappageState extends State<Mappage> {
             _controller = controller;
           },
         ),
-     
         Positioned(
             top: 90,
             left: 8,
