@@ -47,40 +47,46 @@ class _MappageState extends State<Mappage> {
   Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
 
   BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor busMarkerIcon = BitmapDescriptor.defaultMarker;
 
   void _loadcustomMarkerIcon() async {
     customMarkerIcon = await BitmapDescriptor.fromAssetImage(
       ImageConfiguration(),
       'assets/Picon5.png', // Provide the path to your custom marker image
     );
+    busMarkerIcon = await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(),
+      'assets/directions_bus.png', // Provide the path to your custom marker image
+    );
   }
 
-List<Marker> BusMarker = [];
-List<Bus> buses = [];
+  List<Marker> BusMarker = [];
+  List<Bus> buses = [];
 
-void loadBus() async {
-  try {
-    final newBuses = await Provider.of<busLocation>(context, listen: false).fetchBus();
-    final newMarkers = newBuses.map((bus) {
-      final latLngParts = bus.position!.split(",");
-      final busLat = double.parse(latLngParts[0]);
-      final busLng = double.parse(latLngParts[1]);
-      return Marker(
-        markerId: MarkerId('bus_${bus.id}'),
-        position: LatLng(busLat, busLng),
-        infoWindow: InfoWindow(title: 'Bus ${bus.id}'),
-      );
-    }).toList();
+  void loadBus() async {
+    try {
+      final newBuses =
+          await Provider.of<busLocation>(context, listen: false).fetchBus();
+      final newMarkers = newBuses.map((bus) {
+        final latLngParts = bus.position!.split(",");
+        final busLat = double.parse(latLngParts[0]);
+        final busLng = double.parse(latLngParts[1]);
+        return Marker(
+            markerId: MarkerId('bus_${bus.id}'),
+            position: LatLng(busLat, busLng),
+            infoWindow: InfoWindow(title: 'Bus ${bus.id}'),
+            icon: busMarkerIcon);
+      }).toList();
 
-    setState(() {
-      buses = newBuses; // Update bus data
-      BusMarker.clear();
-      BusMarker.addAll(newMarkers);
-    });
-  } catch (error) {
-    print('Error fetching buses: $error');
+      setState(() {
+        buses = newBuses; // Update bus data
+        BusMarker.clear();
+        BusMarker.addAll(newMarkers);
+      });
+    } catch (error) {
+      print('Error fetching buses: $error');
+    }
   }
-}
 
   Timer? _timer;
   @override
