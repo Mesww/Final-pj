@@ -55,43 +55,45 @@ class _MappageState extends State<Mappage> {
     );
   }
 
-  List<Marker> BusMarker = [];
-  List<Bus> buses = [];
-  void loadBus() async {
-    try {
-      List<Bus> buses =
-          await Provider.of<busLocation>(context, listen: false).fetchBus();
-      for (Bus bus in buses) {
-        final String? busLatLng = bus.position;
-        List<String> latLngParts = busLatLng!.split(",");
-        double busLat = double.parse(latLngParts[0]);
-        double busLng = double.parse(latLngParts[1]);
-        final marker = Marker(
-          markerId: MarkerId('bus_${bus.id}'), // Unique ID for each marker
-          position: LatLng(busLat, busLng),
-          infoWindow: InfoWindow(
-            title: 'Bus ${bus.id}', // Display bus ID in info window
-          ),
-        );
-        // Add the marker to the busMarkers list
-        BusMarker.add(marker);
-        print('${busLat} ${busLng}');
-      }
-    } catch (error) {
-      print('Error fetching buses: $error');
-    }
-  }
+List<Marker> BusMarker = [];
+List<Bus> buses = [];
 
+void loadBus() async {
+  try {
+    final newBuses = await Provider.of<busLocation>(context, listen: false).fetchBus();
+    final newMarkers = newBuses.map((bus) {
+      final latLngParts = bus.position!.split(",");
+      final busLat = double.parse(latLngParts[0]);
+      final busLng = double.parse(latLngParts[1]);
+      return Marker(
+        markerId: MarkerId('bus_${bus.id}'),
+        position: LatLng(busLat, busLng),
+        infoWindow: InfoWindow(title: 'Bus ${bus.id}'),
+      );
+    }).toList();
+
+    setState(() {
+      buses = newBuses; // Update bus data
+      BusMarker.clear();
+      BusMarker.addAll(newMarkers);
+    });
+  } catch (error) {
+    print('Error fetching buses: $error');
+  }
+}
+
+  Timer? _timer;
   @override
   void initState() {
     super.initState();
     loadBus();
-    // BusMarker.addAll(list);
+    Timer.periodic(Duration(seconds: 3), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
     checkPermission(Permission.location, context);
+
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -104,7 +106,8 @@ class _MappageState extends State<Mappage> {
   @override
   void dispose() {
     super.dispose();
-    _positionStream?.cancel(); // Cancel the stream subscription
+    _positionStream?.cancel();
+    _timer?.cancel(); // Cancel the stream subscription
   }
 
   //ลากเส้นทาง
@@ -275,6 +278,7 @@ class _MappageState extends State<Mappage> {
       print('Exception occured!');
     }
   }
+
   late List mark;
   @override
   Widget build(BuildContext context) {
@@ -511,7 +515,7 @@ class _MappageState extends State<Mappage> {
           myLocationEnabled: true,
           mapType: MapType.normal,
           initialCameraPosition: _kGooglePlex,
-          markers:[..._markers, ...BusMarker].toSet(),
+          markers: [..._markers, ...BusMarker].toSet(),
           polylines: {
             selectedRoute == "route2"
                 ? _polylineR2
