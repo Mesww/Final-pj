@@ -60,6 +60,7 @@ class _MappageState extends State<Mappage> {
     );
   }
 
+// ดึง API รถเจม ============================================================
   List<Marker> BusMarker = [];
   List<Bus> buses = [];
 
@@ -87,6 +88,7 @@ class _MappageState extends State<Mappage> {
       print('Error fetching buses: $error');
     }
   }
+
 
   Timer? _timer;
   @override
@@ -129,19 +131,12 @@ class _MappageState extends State<Mappage> {
     );
   }
 
+
   void signOutUser() {
     AuthService().signOut(context);
   }
 
-  // Permission
-  Future<LocationPermission> _requestLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    return permission;
-  }
-
+  
   // ดึง Location ของ User
   void _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -254,6 +249,16 @@ class _MappageState extends State<Mappage> {
       ),
     )); // Increase zoom by 1
   }
+
+// Permission
+  Future<LocationPermission> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return permission;
+  }
+
 
   // check Permission ===========================
   Future<void> checkPermission(
