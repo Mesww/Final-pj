@@ -75,7 +75,8 @@ class _MappageState extends State<Mappage> {
         return Marker(
             markerId: MarkerId('bus_${bus.id}'),
             position: LatLng(busLat, busLng),
-            infoWindow: InfoWindow(title: 'Bus ${bus.id}'),
+            infoWindow: InfoWindow(title: 'Bus ${bus.id}',
+            snippet: 'Servertime: ${bus.serverTime}'),
             icon: busMarkerIcon);
       }).toList();
 
@@ -95,13 +96,12 @@ class _MappageState extends State<Mappage> {
   void initState() {
     super.initState();
     loadBus();
-    Timer.periodic(Duration(seconds: 3), (Timer t) => loadBus());
+    Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
     checkPermission(Permission.location, context);
-
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -301,7 +301,7 @@ class _MappageState extends State<Mappage> {
           infoWindow: const InfoWindow(title: '1'),
           icon: customMarkerIcon,
           onTap: () {
-            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);
+            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);                                                                                
             _zoomInMaker(selectedMarker);
           }),
       Marker(
@@ -406,7 +406,7 @@ class _MappageState extends State<Mappage> {
           icon: customMarkerIcon),
     ];
     void MarkerLoop() {
-      for (var i = 0; i < 20; i++) {
+      for (var i = 1; i < 21; i++) {
         if (_markers[i].position == selectedMarker) {
           print(
               "================================================================");
