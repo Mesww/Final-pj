@@ -1,152 +1,118 @@
-import 'dart:convert';
+import 'dart:io' show Platform;
 
-import 'package:final_pj/pages/login/login.dart';
-import 'package:final_pj/pages/map/map.dart';
-import 'package:final_pj/utils/contrants.dart';
-import 'package:final_pj/utils/utils.dart';
-import 'package:flutter/material.dart';
-import 'package:final_pj/model/user.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../provider/user.provider.dart';
+import 'package:flutter_appauth/flutter_appauth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../helper/constants.dart';
 
 class AuthService {
-  void signUpUser({
-    required BuildContext context,
-    required String email,
-    required String password,
-    required String studentid,
-  }) async {
-    try {
-      final navigator = Navigator.of(context);
+  static final AuthService instance = AuthService._();
+  factory AuthService() => instance;
+  AuthService._();
 
-      User user = User(
-        id: '',
-        studentid: studentid,
-        password: password,
-        email: email,
-        token: '',
-      );
+  final FlutterAppAuth _appAuth = const FlutterAppAuth();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-      http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signup'),
-        body: user.toJson(),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
+  Future<bool> initAuth() async {
+    final storedRefreshToken =
+        await _secureStorage.read(key: REFRESH_TOKEN_KEY);
+    final TokenResponse? result;
 
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () {
-          showSnackBar(
-            context,
-            'Account created! Login with the same credentials!',
-          );
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => const LoginView(),
-            ),
-            (route) => false,
-          );
-        },
-      );
-    } catch (e) {
-      showSnackBar(context, e.toString());
+    if (storedRefreshToken == null) {
+      return false;
     }
-  }
 
-  void signInUser({
-    required BuildContext context,
-    required String password,
-    required String studentid,
-  }) async {
     try {
-      var userProvider = Provider.of<UserProvider>(context, listen: false);
-      final navigator = Navigator.of(context);
-      print(studentid);
-
-      http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signin'),
-        body: jsonEncode({
-          'studentid': studentid,
-          'password': password,
-        }),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          userProvider.setUser(res.body);
-          await prefs.setString('x-auth-token', jsonDecode(res.body)['token']);
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => Mappage(),
-            ),
-            (route) => false,
-          );
-        },
-      );
-    } catch (e) {
-      showSnackBar(context, e.toString());
-    }
-  }
-
-  // get user data
-  void getUserData(
-    BuildContext context,
-  ) async {
-    try {
-      var userProvider = Provider.of<UserProvider>(context, listen: false);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('x-auth-token');
-
-      if (token == null) {
-        prefs.setString('x-auth-token', '');
-      }
-
-      var tokenRes = await http.post(
-        Uri.parse('${Constants.uri}/tokenIsValid'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'x-auth-token': token!,
-        },
-      );
-
-      var response = jsonDecode(tokenRes.body);
-      print(response);
-      if (response == true) {
-        http.Response userRes = await http.get(
-          Uri.parse('${Constants.uri}/userdata'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-            'x-auth-token': token
-          },
+      // Obtaining token response from refresh token
+      result = await _appAuth.token(
+          TokenRequest(
+            clientID(),
+            redirectUrl(),
+            issuer: GOOGLE_ISSUER,
+            refreshToken: storedRefreshToken,
+          ),
         );
-        print(userRes.body);
-        userProvider.setUser(userRes.body);
-      }
-    } catch (e) {
-      showSnackBar(context, e.toString());
+
+      final bool setResult = await _handleAuthResult(result);
+      return setResult;
+    } catch (e, s) {
+      print('error on Refresh Token: $e - stack: $s');
+      // logOut() possibly
+      return false;
     }
   }
 
-  void signOut(BuildContext context) async {
-    final navigator = Navigator.of(context);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('x-auth-token', '');
-    navigator.pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const LoginView(),
-      ),
-      (route) => false,
-    );
+  Future<bool> login() async {
+    final AuthorizationTokenRequest authorizationTokenRequest;
+
+    try {
+      authorizationTokenRequest = AuthorizationTokenRequest(
+          clientID(),
+          redirectUrl(),
+          issuer: GOOGLE_ISSUER,
+          scopes: ['email', 'profile'],
+        );
+
+      // Requesting the auth token and waiting for the response
+      final AuthorizationTokenResponse? result =
+          await _appAuth.authorizeAndExchangeCode(
+        authorizationTokenRequest,
+      );
+
+      // Taking the obtained result and processing it
+      return await _handleAuthResult(result);
+    } on PlatformException {
+      print("User has cancelled or no internet!");
+      return false;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> logout() async {
+    await _secureStorage.delete(key: REFRESH_TOKEN_KEY);
+    return true;
+  }
+
+  Future<bool> _handleAuthResult(result) async {
+    final bool isValidResult =
+        result != null && result.accessToken != null && result.idToken != null;
+    if (isValidResult) {
+      // Storing refresh token to renew login on app restart
+      if (result.refreshToken != null) {
+        await _secureStorage.write(
+          key: REFRESH_TOKEN_KEY,
+          value: result.refreshToken,
+        );
+      }
+
+      final String googleAccessToken = result.accessToken;
+
+      // Send request to backend with access token
+      // final url = Uri.https(
+      //   'api.your-server.com',
+      //   '/v1/social-authentication',
+      //   {
+      //     'access_token': googleAccessToken,
+      //   },
+      // );
+      // final response = await http.get(url);
+      // final backendToken = response.token
+
+      // Let's assume it has been successful and a valid token has been returned
+      const String backendToken = 'TOKEN';
+      if (backendToken != null) {
+        await _secureStorage.write(
+          key: BACKEND_TOKEN_KEY,
+          value: backendToken,
+        );
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
 }

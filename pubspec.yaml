@@ -43,7 +43,7 @@ dependencies:
   radial_button: ^1.0.1
   material_floating_search_bar_2: ^0.5.0
   mongo_dart: ^0.10.0
-  http: ^1.2.0
+  http: ^1.2.1
   simple_animations: ^5.0.2
   form_validator: ^2.1.1
   quickalert: ^1.0.2
@@ -52,6 +52,9 @@ dependencies:
   google_directions_api: ^0.10.0
   flutter_polyline_points: ^2.0.0
   permission_handler: ^11.3.0
+  google_sign_in: ^6.2.1
+  flutter_appauth: ^6.0.5
+  flutter_secure_storage: ^9.0.0
 
 dev_dependencies:
   flutter_test:

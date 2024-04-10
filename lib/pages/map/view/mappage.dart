@@ -14,8 +14,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class Mappage extends StatefulWidget {
+   final VoidCallback setUnauthenticatedState;
   Mappage({
     Key? key,
+    required this.setUnauthenticatedState
   }) : super(key: key);
   @override
   State<Mappage> createState() => _MappageState();
@@ -132,8 +134,11 @@ class _MappageState extends State<Mappage> {
   }
 
 
-  void signOutUser() {
-    AuthService().signOut(context);
+  void signOutUser() async{
+    final bool isUnauthenticated = await AuthService.instance.logout();
+    if (isUnauthenticated) {
+    widget.setUnauthenticatedState();
+    }
   }
 
   

@@ -1,3 +1,4 @@
+import 'package:final_pj/pages/loading/loading.dart';
 import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/provider/busLocation.dart';
 import 'package:final_pj/provider/user.provider.dart';
@@ -9,14 +10,13 @@ import 'package:final_pj/config/pallete.dart';
 import 'pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
+import './services/auth.service.dart';
 
 void main() {
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context) => Busline_provider()),
-      ChangeNotifierProvider(create: (context) => Form_login()),
       ChangeNotifierProvider(create: (_) => usersProvider()),
-      ChangeNotifierProvider(create: (_) => Register_provider()),
       ChangeNotifierProvider(create: (_) => ChangeRoute()),
       ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
@@ -34,17 +34,46 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final AuthService authService = AuthService();
+  bool isProgressing = false;
+  bool isLoggedIn = false;
   @override
   void initState() {
-    // TODO: implement initState
+    initAuth();
     super.initState();
-    authService.getUserData(context);
+  }
+
+  initAuth() async {
+    setLoadingState();
+    final bool isAuthenticated = await AuthService.instance.initAuth();
+    if (isAuthenticated) {
+      setAuthenticatedState();
+    } else {
+      setUnauthenticatedState();
+    }
+  }
+
+  setLoadingState() {
+    setState(() {
+      isProgressing = true;
+    });
+  }
+
+  setAuthenticatedState() {
+    setState(() {
+      isProgressing = false;
+      isLoggedIn = true;
+    });
+  }
+
+  setUnauthenticatedState() {
+    setState(() {
+      isProgressing = false;
+      isLoggedIn = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    print(Provider.of<UserProvider>(context).user.token.isEmpty);
     return MaterialApp(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -52,9 +81,21 @@ class _MyAppState extends State<MyApp> {
         primaryColorLight: Palette.goldmfu,
         useMaterial3: true,
       ),
-      home: Provider.of<UserProvider>(context).user.token.isEmpty
-          ? const LoginView()
-          : Mappage(),
+      home: SafeArea(child: Builder(builder: (context){
+        if (isProgressing) {
+              return const LoadingScreen();
+            } else if (isLoggedIn) {
+              return Mappage(
+                setUnauthenticatedState: setUnauthenticatedState,
+              );
+            } else {
+              return LoginView(
+                setLoadingState: setLoadingState,
+                setAuthenticatedState: setAuthenticatedState,
+                setUnauthenticatedState: setUnauthenticatedState,
+              );
+            }
+      }),)
     );
   }
 }
