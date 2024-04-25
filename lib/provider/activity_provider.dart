@@ -49,7 +49,7 @@ class actiivity_provider extends ChangeNotifier {
 
   Future createActivity(Map<String, String> body) async {
     final Uri restAPIURL =
-        Uri.parse("http://35.198.220.216/activity");
+        Uri.parse("http://34.124.142.184/activity");
     http.Response response = await httpClient.post(restAPIURL,
         headers: customHeaders, body: jsonEncode(body));
     print(response.statusCode);
