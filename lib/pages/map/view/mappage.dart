@@ -196,12 +196,12 @@ class _MappageState extends State<Mappage> {
     // ...
   }
 
-  // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
+ // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
     double distance = _calculateDistance(_findClosestMarker(_markers).position);
-    // แปลงค่าระยะทางเป็น String
+    double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
     String distanceText =
-        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} ${distance.toStringAsFixed(0)} ม.';
+        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
     return distanceText;
   }
 
@@ -210,11 +210,9 @@ class _MappageState extends State<Mappage> {
     //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
     closestMarker = _findClosestMarker(_markers);
     double distanceTime = _calculateDistance(closestMarker.position);
-    double speedkmph = 40; // กม./ชม. (ค่าประมาณ)
-    double speedinms = 0.277778 * speedkmph; //แปลงจาก กม เป็น เมตร ต่อ วินาที
-    double time = distanceTime / speedinms;
-    String distanceTimeText =
-        'จะถึงป้ายในอีก ${time.toStringAsFixed(0)} วินาที.';
+    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
+    double time = distanceTime / speed;
+    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
     return distanceTimeText;
   }
 
@@ -539,54 +537,52 @@ class _MappageState extends State<Mappage> {
           },
         ),
         Positioned(
-            top: 90,
-            left: 8,
-            child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isShow = !_isShow;
-                  });
-                },
-                icon: Icon(Icons.navigate_next_outlined))),
-        Positioned(
-          top: 100,
-          left: 20,
-          child: Visibility(
-              visible: _isShow,
-              maintainSize: true,
-              maintainAnimation: true,
-              maintainState: true,
-              child: Container(
-                width: 300,
-                height: 80,
-                color: Colors.amber,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            children: [
-                              Text(_getDistanceText(_markers)),
-                              Text(_getTimeText(_markers))
-                            ],
+          top: 90,
+          left: 8,
+          child: IconButton(
+            onPressed: () {
+              _toggleVisibility();
+              showModalBottomSheet<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  return SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            _getDistanceText(_markers),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _isShow = !_isShow;
-                              });
-                            },
-                            icon: Icon(Icons.navigate_before_rounded))
-                      ],
+                          SizedBox(height: 5),
+                          Text(
+                            _getTimeText(_markers),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // IconButton(
+                          //   onPressed: () => Navigator.pop(context),
+                          //   icon: Icon(Icons
+                          //       .close), // เปลี่ยนไอคอนเป็น close หรือไอคอนที่คุณต้องการ
+                          // ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              )),
+                  );
+                },
+              );
+            },
+            icon: Icon(Icons.car_crash_rounded), // เปลี่ยนไอคอนที่นี่
+          ),
         ),
+
         Positioned(
           top: 100.0,
           right: 20.0,
@@ -654,5 +650,10 @@ class _MappageState extends State<Mappage> {
               children: itemsActionBar)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+    void _toggleVisibility() {
+    setState(() {
+      _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
+    });
   }
 }
