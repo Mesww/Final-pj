@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-import 'package:final_pj/Map.dart';
+// import 'package:final_pj/Map.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
@@ -7,7 +6,6 @@ import 'package:final_pj/config/pallete.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
 import 'package:final_pj/pages/home/view/homepage.dart';
-=======
 import 'package:final_pj/pages/login/login.dart';
 import 'package:final_pj/provider/user.provider.dart';
 // import 'package:final_pj/provider/changeRoute.dart';
@@ -19,7 +17,6 @@ import 'pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
 
->>>>>>> c2223a6703e1f8bba4d04338b89ef5bd006c00b5
 void main() {
   runApp(MultiProvider(
     providers: [
@@ -61,13 +58,9 @@ class _MyAppState extends State<MyApp> {
         primaryColorLight: Palette.goldmfu,
         useMaterial3: true,
       ),
-<<<<<<< HEAD
-      home: const MapSample(),
-=======
       home: Provider.of<UserProvider>(context).user.token.isEmpty
           ? const LoginView()
           : Mappage(),
->>>>>>> c2223a6703e1f8bba4d04338b89ef5bd006c00b5
     );
   }
 }
