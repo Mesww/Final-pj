@@ -206,15 +206,30 @@ class _MappageState extends State<Mappage> {
   }
 
   //คำนวนเวลา
-  String _getTimeText(_markers) {
-    //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
-    closestMarker = _findClosestMarker(_markers);
-    double distanceTime = _calculateDistance(closestMarker.position);
-    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
-    double time = distanceTime / speed;
-    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
-    return distanceTimeText;
+String _getTimeText(List<Marker> _markers) {
+  Marker closestMarker = _findClosestMarker(_markers);
+  double distanceInMeters = _calculateDistance(closestMarker.position);
+  double speedKmPerHour = 40.0;
+  
+  double distanceInKm = distanceInMeters / 1000;
+  double timeInHours = distanceInKm / speedKmPerHour;
+  
+  // คำนวณเวลาเป็นวินาที
+  int totalSeconds = (timeInHours * 3600).round();
+  
+  // แยกเป็นนาทีและวินาที
+  int minutes = totalSeconds ~/ 60;
+  int seconds = totalSeconds % 60;
+  
+  String distanceTimeText;
+  if (minutes > 0) {
+    distanceTimeText = 'จะถึงป้ายในอีก $minutes นาที $seconds วินาที';
+  } else {
+    distanceTimeText = 'จะถึงป้ายในอีก $seconds วินาที';
   }
+  
+  return distanceTimeText;
+}
 
   // เซ็ต camera ไปที่ location ของ user
   void _goToMyLocation() async {
@@ -554,15 +569,15 @@ class _MappageState extends State<Mappage> {
                         children: <Widget>[
                           Text(
                             _getDistanceText(_markers),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Text(
                             _getTimeText(_markers),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
