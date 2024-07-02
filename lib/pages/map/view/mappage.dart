@@ -1,14 +1,16 @@
 import 'dart:async';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
+import 'package:final_pj/provider/busLocation.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class Mappage extends StatefulWidget {
@@ -21,7 +23,7 @@ class Mappage extends StatefulWidget {
 
 class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
   final directionsApi = DirectionsService();
-  late LatLng selectedMarker;
+  LatLng selectedMarker = const LatLng(0, 0);
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
@@ -32,7 +34,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
   bool _isShow = true;
 
   final double _proximityThreshold = 5;
-
+  List<Marker> _markers = [];
   // กำหนด State สำหรับ Location ของ User
   late LatLng _userLocation =
       const LatLng(20.050236851378024, 99.89456487892942);
@@ -45,23 +47,61 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
   Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
 
   BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor busMarkerIcon = BitmapDescriptor.defaultMarker;
 
   void _loadcustomMarkerIcon() async {
     customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(),
+      ImageConfiguration(),
+      'assets/Picon5.png', // Provide the path to your custom marker image
+    );
+    busMarkerIcon = await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(),
       'assets/directions_bus.png', // Provide the path to your custom marker image
     );
   }
 
+// ดึง API รถเจม ============================================================
+  List<Marker> BusMarker = [];
+  List<Bus> buses = [];
+
+  void loadBus() async {
+    try {
+      final newBuses =
+          await Provider.of<busLocation>(context, listen: false).fetchBus();
+      final newMarkers = newBuses.map((bus) {
+        final latLngParts = bus.position!.split(",");
+        final busLat = double.parse(latLngParts[0]);
+        final busLng = double.parse(latLngParts[1]);
+        return Marker(
+            markerId: MarkerId('bus_${bus.id}'),
+            position: LatLng(busLat, busLng),
+            infoWindow: InfoWindow(title: 'Bus ${bus.id}',
+            snippet: 'Servertime: ${bus.serverTime}'),
+            icon: busMarkerIcon);
+      }).toList();
+
+      setState(() {
+        buses = newBuses; // Update bus data
+        BusMarker.clear();
+        BusMarker.addAll(newMarkers);
+      });
+    } catch (error) {
+      print('Error fetching buses: $error');
+    }
+  }
+
+
+  Timer? _timer;
   @override
   void initState() {
     super.initState();
-    // _markers.addAll(list);
+    loadBus();
+    Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
-
+    checkPermission(Permission.location, context);
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -71,10 +111,11 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
     });
   }
 
-  void _toggleVisibility() {
-    setState(() {
-      _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
-    });
+  @override
+  void dispose() {
+    super.dispose();
+    _positionStream?.cancel();
+    _timer?.cancel(); // Cancel the stream subscription
   }
 
   //ลากเส้นทาง
@@ -90,19 +131,12 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
     );
   }
 
+
   void signOutUser() {
     AuthService().signOut(context);
   }
 
-  // Permission
-  Future<LocationPermission> _requestLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    return permission;
-  }
-
+  
   // ดึง Location ของ User
   void _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -147,6 +181,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
     setActivity.set_location_act("${closestMarker.position}");
     setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
     setActivity.set_time_act("${now}");
+    print(now);
   }
 //  ====================================================================================================================================
 
@@ -161,7 +196,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
     // ...
   }
 
-  // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
+ // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
     double distance = _calculateDistance(_findClosestMarker(_markers).position);
     double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
@@ -203,14 +238,54 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
         CameraUpdate.zoomTo(_kGooglePlex.zoom - 1)); // Decrease zoom by 1
   }
 
-  void _zoomInMaker(LatLng position) {
+  void _zoomInMaker(LatLng position) async {
     print(position);
-    _controller.animateCamera(CameraUpdate.newCameraPosition(
+    await _controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
         target: position,
         zoom: 17.0,
       ),
     )); // Increase zoom by 1
+  }
+
+// Permission
+  Future<LocationPermission> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return permission;
+  }
+
+
+  // check Permission ===========================
+  Future<void> checkPermission(
+      Permission permission, BuildContext context) async {
+    showAlertDialog(context) => showCupertinoDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => CupertinoAlertDialog(
+            title: const Text('Permission Denied'),
+            content: const Text('Allow access to your location'),
+            actions: <CupertinoDialogAction>[
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => openAppSettings(),
+                child: const Text('Settings'),
+              ),
+            ],
+          ),
+        );
+    final status = await permission.request();
+    if (status.isGranted) {
+    } else {
+      showAlertDialog(context);
+      print('Exception occured!');
+    }
   }
 
   late List mark;
@@ -224,7 +299,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
           infoWindow: const InfoWindow(title: '1'),
           icon: customMarkerIcon,
           onTap: () {
-            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);
+            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);                                                                                
             _zoomInMaker(selectedMarker);
           }),
       Marker(
@@ -328,9 +403,8 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
           infoWindow: const InfoWindow(title: '21'),
           icon: customMarkerIcon),
     ];
-
     void MarkerLoop() {
-      for (var i = 0; i < 20; i++) {
+      for (var i = 1; i < 21; i++) {
         if (_markers[i].position == selectedMarker) {
           print(
               "================================================================");
@@ -462,7 +536,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
           myLocationEnabled: true,
           mapType: MapType.normal,
           initialCameraPosition: _kGooglePlex,
-          markers: _markers.toSet(),
+          markers: [..._markers, ...BusMarker].toSet(),
           polylines: {
             selectedRoute == "route2"
                 ? _polylineR2
@@ -520,6 +594,7 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
             icon: Icon(Icons.car_crash_rounded), // เปลี่ยนไอคอนที่นี่
           ),
         ),
+
         Positioned(
           top: 100.0,
           right: 20.0,
@@ -587,5 +662,10 @@ class _MappageState extends State<Mappage> with SingleTickerProviderStateMixin {
               children: itemsActionBar)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+    void _toggleVisibility() {
+    setState(() {
+      _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
+    });
   }
 }

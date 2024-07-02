@@ -31,7 +31,7 @@ class AuthService {
       );
 
       http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signup'),
+        Uri.parse('${Constants.uri}/users/signup'),
         body: user.toJson(),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -70,7 +70,7 @@ class AuthService {
       print(studentid);
 
       http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signin'),
+        Uri.parse('${Constants.uri}/users/signin'),
         body: jsonEncode({
           'studentid': studentid,
           'password': password,

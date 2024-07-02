@@ -1,3 +1,3 @@
 class Constants {
-  static String uri = 'http://35.198.220.216';
+  static String uri = 'https://rv1wl6nk-4444.asse.devtunnels.ms';
 }
