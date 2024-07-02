@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:final_pj/utils/contrants.dart';
 
 class actiivity_provider extends ChangeNotifier {
   late String studentId_act;
@@ -48,8 +49,7 @@ class actiivity_provider extends ChangeNotifier {
   final httpClient = http.Client();
 
   Future createActivity(Map<String, String> body) async {
-    final Uri restAPIURL =
-        Uri.parse("http://34.124.142.184/activity");
+    final Uri restAPIURL = Uri.parse('${Constants.uri}/activity');
     http.Response response = await httpClient.post(restAPIURL,
         headers: customHeaders, body: jsonEncode(body));
     print(response.statusCode);
