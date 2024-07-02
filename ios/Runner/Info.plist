@@ -41,19 +41,22 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.977400494676-r4ihi082v8uce61t9q3ofuuaia5pjare</string>
+            </array>
+        </dict>
+    </array>
+
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>CFBundleTypeRole</key>
- 	<string>Editor</string>
-  	<key>CFBundleURLSchemes</key>
-  	<array>
-   	 <string>com.googleusercontent.apps.977400494676-r4ihi082v8uce61t9q3ofuuaia5pjare.apps.googleusercontent.com</string>
-  	</array> 
-
 
 </dict>
 </plist>

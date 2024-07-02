@@ -81,6 +81,7 @@ flutter:
     - assets/Mae-Fah-Luang-University-2-768x779.png
     - assets/bus.png
     - assets/directions_bus.png
+    - assets/googlelogo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

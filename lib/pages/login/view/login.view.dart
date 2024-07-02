@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:final_pj/pages/register/view/view.dart';
 import 'package:final_pj/provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/pages/login/widget/widget.dart';
 import 'package:flutter/widgets.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:form_validator/form_validator.dart';
 
@@ -51,139 +55,71 @@ class LoginView extends StatelessWidget {
                   SizedBox(
                     height: 20,
                   ),
-                  // !form
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Container(
-                      child: TextFormField(
-                        controller: getFormLogin.get_studentid(),
-                        keyboardType: TextInputType.numberWithOptions(
-                            signed: false, decimal: true),
-                        onSaved: (String? studentID) =>
-                            setFormLogin.set_studentID(studentID!),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter stundent id';
-                          }
-                          return null;
-                        },
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                        decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey[200],
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12)),
-                            hintStyle: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            hintText: 'StudentID',
-                            prefixIcon: Icon(Icons.person),
-                            prefixIconColor: Theme.of(context).primaryColor),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 4,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Container(
-                      child: TextFormField(
-                        controller: getFormLogin.password,
-                        keyboardType: TextInputType.visiblePassword,
-                        onSaved: (String? password) =>
-                            setFormLogin.set__password(password!),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter password';
-                          }
-                          return null;
-                        },
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                        obscureText: obscure_password,
-                        decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.grey[200],
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(12)),
-                            prefixIcon: Icon(Icons.key_rounded),
-                            prefixIconColor: Theme.of(context).primaryColor,
-                            suffixIconColor: Theme.of(context).primaryColor,
-                            hintStyle: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            hintText: 'Password',
-                            suffixIcon: IconButton(
-                                onPressed: () {
-                                  setFormLogin.set_obscure_password_login(
-                                      !obscure_password);
-                                },
-                                icon: Icon(obscure_password
-                                    ? Icons.visibility
-                                    : Icons.visibility_off))),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
                   // !submit button
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       // Navigator.pushReplacement(context,
                       //     MaterialPageRoute(builder: ((context) => Mappage())));
-                      if (getFormLogin.get_formkey().currentState!.validate()) {
-                        getFormLogin.get_formkey().currentState!.save();
-                        setFormLogin.loginUser(context);
+                      // if (getFormLogin.get_formkey().currentState!.validate()) {
+                      //   getFormLogin.get_formkey().currentState!.save();
+                      //   setFormLogin.loginUser(context);
+                      // }
+                      //Default definition
+                      GoogleSignIn googleSignIn = GoogleSignIn(
+                        scopes: [
+                          'email',
+                        ],
+                      );
+
+//If current device is Web or Android, do not use any parameters except from scopes.
+                      if (kIsWeb || Platform.isAndroid) {
+                        googleSignIn = GoogleSignIn(
+                          scopes: [
+                            'email',
+                          ],
+                        );
                       }
+
+                      if (Platform.isIOS || Platform.isMacOS) {
+                        googleSignIn = GoogleSignIn(
+                          clientId: "977400494676-r4ihi082v8uce61t9q3ofuuaia5pjare.apps.googleusercontent.com",
+                          scopes: [
+                            'email',
+                          ],
+                        );
+                      }
+
+                      final GoogleSignInAccount? googleAccount =
+                          await googleSignIn.signIn();
+
+                      //further information about Google accounts, such as authentication, use this.
+                      final GoogleSignInAuthentication googleAuthentication =
+                          await googleAccount!.authentication;
+                      // print(googleAuthentication.accessToken);
+                      
                     },
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 25),
                       child: Container(
                         padding: EdgeInsets.all(20),
-                        child: Center(
-                          child: Text(
-                            'Sign In',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset("assets/googlelogo.png",width: 20,),
+                            SizedBox(width: 10,),
+                            Text(
+                              'Sign In',
+                              style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                         decoration: BoxDecoration(
                             color: Theme.of(context).primaryColor,
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    height: 30,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Not a member ? ',
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // print('test');
-                          // registerModel(context);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => RegisterView()));
-                        },
-                        child: Text(
-                          'Register now',
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColorLight,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12),
-                        ),
-                      ),
-                    ],
                   )
+                  
                 ],
               ),
             ),
