@@ -10,6 +10,7 @@ import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Mappage extends StatefulWidget {
   Mappage({
@@ -20,6 +21,9 @@ class Mappage extends StatefulWidget {
 }
 
 class _MappageState extends State<Mappage> {
+  late SharedPreferences prefs;
+  late Map<String, dynamic> decodedToken;
+
   final directionsApi = DirectionsService();
   late LatLng selectedMarker;
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -62,6 +66,9 @@ class _MappageState extends State<Mappage> {
     _getUserLocation();
     _loadcustomMarkerIcon();
 
+    // set share token
+    initSharedPref();
+
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -77,6 +84,15 @@ class _MappageState extends State<Mappage> {
     _positionStream?.cancel(); // Cancel the stream subscription
   }
 
+  void initSharedPref() async {
+    prefs = await SharedPreferences.getInstance();
+    // set decode token
+    decodedToken = prefs.getString("token") != null
+        ? AuthService().decodeJWT(prefs.getString("token")!)
+        : {};
+    print(decodedToken);
+  }
+
   //ลากเส้นทาง
   void _setPolylinePoints() {
     //Import form const.dart
@@ -88,10 +104,6 @@ class _MappageState extends State<Mappage> {
       pointsParam: polylinePointsRoute2,
       colorParam: const Color(0xffbc9945),
     );
-  }
-
-  void signOutUser() {
-    AuthService().signOut(context);
   }
 
   // Permission
@@ -139,10 +151,10 @@ class _MappageState extends State<Mappage> {
   // set activity ไป database ======================================================================================================
   setAllActivity() {
     DateTime now = DateTime.now();
-    var user = Provider.of<UserProvider>(context, listen: false);
+    // var user = Provider.of<UserProvider>(context, listen: false);
     // const std_id = '123';
     final setActivity = context.read<actiivity_provider>();
-    setActivity.set_studentId_act(user.user.studentid);
+    setActivity.set_studentId_act(decodedToken['id']);
     setActivity.set_marker_act('${closestMarker.infoWindow.title}');
     setActivity.set_location_act("${closestMarker.position}");
     setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
@@ -357,8 +369,8 @@ class _MappageState extends State<Mappage> {
             _showClosestMarker(_markers);
             setAllActivity();
             // get current user information
-            var user = Provider.of<UserProvider>(context, listen: false);
-            print('StudentID: ' + user.user.studentid);
+            // var user = Provider.of<UserProvider>(context, listen: false);
+            // print('StudentID: ' + user.user.studentid);
             Provider.of<actiivity_provider>(context, listen: false)
                 .createActivity(
               {
@@ -385,8 +397,9 @@ class _MappageState extends State<Mappage> {
             _showClosestMarker(_markers);
             setAllActivity();
             // get current user information
-            var user = Provider.of<UserProvider>(context, listen: false);
-            print('StudentID: ' + user.user.studentid);
+            // var user = Provider.of<UserProvider>(context, listen: false);
+            // print('StudentID: ' + user.user.studentid);
+
             Provider.of<actiivity_provider>(context, listen: false)
                 .createActivity(
               {
@@ -424,7 +437,7 @@ class _MappageState extends State<Mappage> {
         leading: IconButton(
             color: Theme.of(context).primaryColorLight,
             onPressed: () {
-              signOutUser();
+              AuthService().handleSignOut(context, prefs);
             },
             icon: const Icon(Icons.logout_rounded)),
         title: Row(

@@ -5,146 +5,88 @@ import 'package:final_pj/pages/map/map.dart';
 import 'package:final_pj/utils/contrants.dart';
 import 'package:final_pj/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:final_pj/model/user.dart';
 import 'package:flutter/widgets.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../provider/user.provider.dart';
+import 'package:http/http.dart' as http;
 
 class AuthService {
-  void signUpUser({
-    required BuildContext context,
-    required String email,
-    required String password,
-    required String studentid,
-  }) async {
-    try {
-      final navigator = Navigator.of(context);
-
-      User user = User(
-        id: '',
-        studentid: studentid,
-        password: password,
-        email: email,
-        token: '',
-      );
-
-      http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signup'),
-        body: user.toJson(),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () {
-          showSnackBar(
-            context,
-            'Account created! Login with the same credentials!',
-          );
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => const LoginView(),
-            ),
-            (route) => false,
-          );
-        },
-      );
-    } catch (e) {
-      showSnackBar(context, e.toString());
-    }
-  }
-
-  void signInUser({
-    required BuildContext context,
-    required String password,
-    required String studentid,
-  }) async {
-    try {
-      var userProvider = Provider.of<UserProvider>(context, listen: false);
-      final navigator = Navigator.of(context);
-      print(studentid);
-
-      http.Response res = await http.post(
-        Uri.parse('${Constants.uri}/signin'),
-        body: jsonEncode({
-          'studentid': studentid,
-          'password': password,
-        }),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          userProvider.setUser(res.body);
-          await prefs.setString('x-auth-token', jsonDecode(res.body)['token']);
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => Mappage(),
-            ),
-            (route) => false,
-          );
-        },
-      );
-    } catch (e) {
-      showSnackBar(context, e.toString());
-    }
-  }
-
-  // get user data
-  void getUserData(
-    BuildContext context,
-  ) async {
-    try {
-      var userProvider = Provider.of<UserProvider>(context, listen: false);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('x-auth-token');
-
-      if (token == null) {
-        prefs.setString('x-auth-token', '');
-      }
-
-      var tokenRes = await http.post(
-        Uri.parse('${Constants.uri}/tokenIsValid'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'x-auth-token': token!,
-        },
-      );
-
-      var response = jsonDecode(tokenRes.body);
-      print(response);
-      if (response == true) {
-        http.Response userRes = await http.get(
-          Uri.parse('${Constants.uri}/userdata'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-            'x-auth-token': token
-          },
-        );
-        print(userRes.body);
-        userProvider.setUser(userRes.body);
-      }
-    } catch (e) {
-      showSnackBar(context, e.toString());
-    }
-  }
-
-  void signOut(BuildContext context) async {
+  Future<void> handleSignIn(GoogleSignIn googleSignIn, BuildContext context,
+      SharedPreferences prefs) async {
     final navigator = Navigator.of(context);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('x-auth-token', '');
+
+    // var userProvider = Provider.of<UserProvider>(context, listen: false);
+    try {
+      GoogleSignInAccount? account = await googleSignIn.signIn();
+      if (account != null) {
+        GoogleSignInAuthentication auth = await account.authentication;
+        final response = await http.post(
+          Uri.parse('${Constants.uri}/users/signin'),
+          body: {'idToken': auth.idToken},
+        );
+
+        if (response.statusCode == 200) {
+          // Successfully verified token
+          print('Token verified: ${response.body}');
+          prefs.setString('token', response.body);
+          navigator.pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => Mappage()),
+              (route) => false);
+        } else {
+          print('Token verification failed');
+        }
+      }
+    } catch (error) {
+      showSnackBar(context, error.toString());
+      print(error);
+    }
+  }
+
+    Map<String, dynamic> decodeJWT(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('Invalid token');
+    }
+
+    final payload = _decodeBase64(parts[1]);
+    final payloadMap = jsonDecode(payload);
+
+    if (payloadMap is! Map<String, dynamic>) {
+      throw Exception('Invalid payload');
+    }
+
+    return payloadMap;
+  }
+
+  String _decodeBase64(String str) {
+    String output = str.replaceAll('-', '+').replaceAll('_', '/');
+
+    switch (output.length % 4) {
+      case 0:
+        break;
+      case 2:
+        output += '==';
+        break;
+      case 3:
+        output += '=';
+        break;
+      default:
+        throw Exception('Illegal base64url string!"');
+    }
+
+    return utf8.decode(base64Url.decode(output));
+  }
+
+  void handleSignOut(BuildContext context, SharedPreferences prefs) async {
+    final navigator = Navigator.of(context);
+    // var userProvider = Provider.of<UserProvider>(context, listen: false);
+    // userProvider.clearUser();
+    prefs.clear();
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (context) => const LoginView(),
+        builder: (context) => LoginView(),
       ),
       (route) => false,
     );

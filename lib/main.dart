@@ -4,53 +4,47 @@ import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
 // import 'pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 import 'package:final_pj/pages/home/view/homepage.dart';
 import 'package:final_pj/pages/login/login.dart';
-import 'package:final_pj/provider/user.provider.dart';
 // import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:flutter/material.dart';
 import 'package:final_pj/config/pallete.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/map/map.dart';
 import 'package:final_pj/provider/provider.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  //  share small data
+  SharedPreferences prefs = await SharedPreferences.getInstance();
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context) => Busline_provider()),
-      ChangeNotifierProvider(create: (context) => Form_login()),
       ChangeNotifierProvider(create: (_) => usersProvider()),
-      ChangeNotifierProvider(create: (_) => Register_provider()),
       ChangeNotifierProvider(create: (_) => ChangeRoute()),
-      ChangeNotifierProvider(create: (_) => UserProvider()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
     ],
-    child: const MyApp(),
+    child: MyApp(token: prefs.getString('token')),
   ));
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final AuthService authService = AuthService();
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    authService.getUserData(context);
-  }
-
+class MyApp extends StatelessWidget {
+  final token;
+  
+  const MyApp({
+    super.key,
+    @required this.token,
+  });
   @override
   Widget build(BuildContext context) {
-    print(Provider.of<UserProvider>(context).user.token.isEmpty);
+    bool isUserLoggedIn = token != null;
+    // bool isUserLoggedIn = false;
+    print(isUserLoggedIn);
     return MaterialApp(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -58,9 +52,7 @@ class _MyAppState extends State<MyApp> {
         primaryColorLight: Palette.goldmfu,
         useMaterial3: true,
       ),
-      home: Provider.of<UserProvider>(context).user.token.isEmpty
-          ? const LoginView()
-          : Mappage(),
+      home: isUserLoggedIn ? Mappage() : LoginView(),
     );
   }
 }
