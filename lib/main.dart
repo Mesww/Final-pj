@@ -8,6 +8,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 import 'package:final_pj/pages/home/view/homepage.dart';
 import 'package:final_pj/pages/login/login.dart';
+import 'package:final_pj/provider/busLocation.dart';
 // import 'package:final_pj/provider/changeRoute.dart';
 import 'package:final_pj/provider/users_list.dart';
 import 'package:final_pj/services/auth.service.dart';
@@ -28,6 +29,7 @@ void main() async {
       ChangeNotifierProvider(create: (_) => usersProvider()),
       ChangeNotifierProvider(create: (_) => ChangeRoute()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
+      ChangeNotifierProvider(create: (_) => busLocation()),
     ],
     child: MyApp(token: prefs.getString('token')),
   ));
@@ -35,7 +37,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final token;
-  
+
   const MyApp({
     super.key,
     @required this.token,

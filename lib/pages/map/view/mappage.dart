@@ -1,14 +1,16 @@
 import 'dart:async';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
+import 'package:final_pj/provider/busLocation.dart';
 import 'package:final_pj/services/auth.service.dart';
 import 'package:final_pj/provider/provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_directions_api/google_directions_api.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,7 +27,7 @@ class _MappageState extends State<Mappage> {
   late Map<String, dynamic> decodedToken;
 
   final directionsApi = DirectionsService();
-  late LatLng selectedMarker;
+  LatLng selectedMarker = const LatLng(0, 0);
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(20.050236851378024, 99.89456487892942),
     zoom: 16,
@@ -36,7 +38,7 @@ class _MappageState extends State<Mappage> {
   bool _isShow = true;
 
   final double _proximityThreshold = 5;
-
+  List<Marker> _markers = [];
   // กำหนด State สำหรับ Location ของ User
   late LatLng _userLocation =
       const LatLng(20.050236851378024, 99.89456487892942);
@@ -49,18 +51,56 @@ class _MappageState extends State<Mappage> {
   Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
 
   BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor busMarkerIcon = BitmapDescriptor.defaultMarker;
 
   void _loadcustomMarkerIcon() async {
     customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(),
+      ImageConfiguration(),
+      'assets/Picon5.png', // Provide the path to your custom marker image
+    );
+    busMarkerIcon = await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(),
       'assets/directions_bus.png', // Provide the path to your custom marker image
     );
   }
 
+// ดึง API รถเจม ============================================================
+  List<Marker> BusMarker = [];
+  List<Bus> buses = [];
+
+  void loadBus() async {
+    try {
+      final newBuses =
+          await Provider.of<busLocation>(context, listen: false).fetchBus();
+      final newMarkers = newBuses.map((bus) {
+        final latLngParts = bus.position!.split(",");
+        final busLat = double.parse(latLngParts[0]);
+        final busLng = double.parse(latLngParts[1]);
+        return Marker(
+            markerId: MarkerId('bus_${bus.id}'),
+            position: LatLng(busLat, busLng),
+            infoWindow: InfoWindow(title: 'Bus ${bus.id}',
+            snippet: 'Servertime: ${bus.serverTime}'),
+            icon: busMarkerIcon);
+      }).toList();
+
+      setState(() {
+        buses = newBuses; // Update bus data
+        BusMarker.clear();
+        BusMarker.addAll(newMarkers);
+      });
+    } catch (error) {
+      print('Error fetching buses: $error');
+    }
+  }
+
+
+  Timer? _timer;
   @override
   void initState() {
     super.initState();
-    // _markers.addAll(list);
+    loadBus();
+    Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
@@ -69,6 +109,7 @@ class _MappageState extends State<Mappage> {
     // set share token
     initSharedPref();
 
+    checkPermission(Permission.location, context);
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
       setState(() {
@@ -81,7 +122,8 @@ class _MappageState extends State<Mappage> {
   @override
   void dispose() {
     super.dispose();
-    _positionStream?.cancel(); // Cancel the stream subscription
+    _positionStream?.cancel();
+    _timer?.cancel(); // Cancel the stream subscription
   }
 
   void initSharedPref() async {
@@ -106,15 +148,10 @@ class _MappageState extends State<Mappage> {
     );
   }
 
-  // Permission
-  Future<LocationPermission> _requestLocationPermission() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    return permission;
-  }
 
+
+
+  
   // ดึง Location ของ User
   void _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -161,6 +198,7 @@ class _MappageState extends State<Mappage> {
     setActivity.set_location_act("${closestMarker.position}");
     setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
     setActivity.set_time_act("${now}");
+    print(now);
   }
 //  ====================================================================================================================================
 
@@ -175,25 +213,40 @@ class _MappageState extends State<Mappage> {
     // ...
   }
 
-  // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
+ // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
     double distance = _calculateDistance(_findClosestMarker(_markers).position);
-    // แปลงค่าระยะทางเป็น String
+    double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
     String distanceText =
-        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} ${distance.toStringAsFixed(0)} ม.';
+        'คุณห่างจากป้าย ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
     return distanceText;
   }
 
   //คำนวนเวลา
-  String _getTimeText(_markers) {
-    //คำนวนเวลาที่จะถึงป้ายที่ใกล้ที่สุด
-    closestMarker = _findClosestMarker(_markers);
-    double distanceTime = _calculateDistance(closestMarker.position);
-    double speed = 40.0; // กม./ชม. (ค่าประมาณ)
-    double time = distanceTime / speed;
-    String distanceTimeText = 'จะถึงป้ายในอีก ${time.toStringAsFixed(2)} นาที.';
-    return distanceTimeText;
+String _getTimeText(List<Marker> _markers) {
+  Marker closestMarker = _findClosestMarker(_markers);
+  double distanceInMeters = _calculateDistance(closestMarker.position);
+  double speedKmPerHour = 40.0;
+  
+  double distanceInKm = distanceInMeters / 1000;
+  double timeInHours = distanceInKm / speedKmPerHour;
+  
+  // คำนวณเวลาเป็นวินาที
+  int totalSeconds = (timeInHours * 3600).round();
+  
+  // แยกเป็นนาทีและวินาที
+  int minutes = totalSeconds ~/ 60;
+  int seconds = totalSeconds % 60;
+  
+  String distanceTimeText;
+  if (minutes > 0) {
+    distanceTimeText = 'จะถึงป้ายในอีก $minutes นาที $seconds วินาที';
+  } else {
+    distanceTimeText = 'จะถึงป้ายในอีก $seconds วินาที';
   }
+  
+  return distanceTimeText;
+}
 
   // เซ็ต camera ไปที่ location ของ user
   void _goToMyLocation() async {
@@ -217,14 +270,54 @@ class _MappageState extends State<Mappage> {
         CameraUpdate.zoomTo(_kGooglePlex.zoom - 1)); // Decrease zoom by 1
   }
 
-  void _zoomInMaker(LatLng position) {
+  void _zoomInMaker(LatLng position) async {
     print(position);
-    _controller.animateCamera(CameraUpdate.newCameraPosition(
+    await _controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
         target: position,
         zoom: 17.0,
       ),
     )); // Increase zoom by 1
+  }
+
+// Permission
+  Future<LocationPermission> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return permission;
+  }
+
+
+  // check Permission ===========================
+  Future<void> checkPermission(
+      Permission permission, BuildContext context) async {
+    showAlertDialog(context) => showCupertinoDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => CupertinoAlertDialog(
+            title: const Text('Permission Denied'),
+            content: const Text('Allow access to your location'),
+            actions: <CupertinoDialogAction>[
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => openAppSettings(),
+                child: const Text('Settings'),
+              ),
+            ],
+          ),
+        );
+    final status = await permission.request();
+    if (status.isGranted) {
+    } else {
+      showAlertDialog(context);
+      print('Exception occured!');
+    }
   }
 
   late List mark;
@@ -238,7 +331,7 @@ class _MappageState extends State<Mappage> {
           infoWindow: const InfoWindow(title: '1'),
           icon: customMarkerIcon,
           onTap: () {
-            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);
+            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);                                                                                
             _zoomInMaker(selectedMarker);
           }),
       Marker(
@@ -342,9 +435,8 @@ class _MappageState extends State<Mappage> {
           infoWindow: const InfoWindow(title: '21'),
           icon: customMarkerIcon),
     ];
-
     void MarkerLoop() {
-      for (var i = 0; i < 20; i++) {
+      for (var i = 1; i < 21; i++) {
         if (_markers[i].position == selectedMarker) {
           print(
               "================================================================");
@@ -466,7 +558,7 @@ class _MappageState extends State<Mappage> {
           myLocationEnabled: true,
           mapType: MapType.normal,
           initialCameraPosition: _kGooglePlex,
-          markers: _markers.toSet(),
+          markers: [..._markers, ...BusMarker].toSet(),
           polylines: {
             selectedRoute == "route2"
                 ? _polylineR2
@@ -479,54 +571,52 @@ class _MappageState extends State<Mappage> {
           },
         ),
         Positioned(
-            top: 90,
-            left: 8,
-            child: IconButton(
-                onPressed: () {
-                  setState(() {
-                    _isShow = !_isShow;
-                  });
-                },
-                icon: Icon(Icons.navigate_next_outlined))),
-        Positioned(
-          top: 100,
-          left: 20,
-          child: Visibility(
-              visible: _isShow,
-              maintainSize: true,
-              maintainAnimation: true,
-              maintainState: true,
-              child: Container(
-                width: 300,
-                height: 80,
-                color: Colors.amber,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            children: [
-                              Text(_getDistanceText(_markers)),
-                              Text(_getTimeText(_markers))
-                            ],
+          top: 90,
+          left: 8,
+          child: IconButton(
+            onPressed: () {
+              _toggleVisibility();
+              showModalBottomSheet<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  return SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            _getDistanceText(_markers),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _isShow = !_isShow;
-                              });
-                            },
-                            icon: Icon(Icons.navigate_before_rounded))
-                      ],
+                          const SizedBox(height: 5),
+                          Text(
+                            _getTimeText(_markers),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // IconButton(
+                          //   onPressed: () => Navigator.pop(context),
+                          //   icon: Icon(Icons
+                          //       .close), // เปลี่ยนไอคอนเป็น close หรือไอคอนที่คุณต้องการ
+                          // ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              )),
+                  );
+                },
+              );
+            },
+            icon: Icon(Icons.car_crash_rounded), // เปลี่ยนไอคอนที่นี่
+          ),
         ),
+
         Positioned(
           top: 100.0,
           right: 20.0,
@@ -594,5 +684,10 @@ class _MappageState extends State<Mappage> {
               children: itemsActionBar)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+    void _toggleVisibility() {
+    setState(() {
+      _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
+    });
   }
 }
