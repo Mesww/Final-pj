@@ -154,6 +154,8 @@ class _MappageState extends State<Mappage> {
     // var user = Provider.of<UserProvider>(context, listen: false);
     // const std_id = '123';
     final setActivity = context.read<actiivity_provider>();
+
+    // use token intead of studentid
     setActivity.set_studentId_act(decodedToken['id']);
     setActivity.set_marker_act('${closestMarker.infoWindow.title}');
     setActivity.set_location_act("${closestMarker.position}");
@@ -359,6 +361,7 @@ class _MappageState extends State<Mappage> {
     // String selectedRoute = Provider.of<ChangeRoute>(context).route;
     var busline_provider_get = context.watch<Busline_provider>();
     var busline_provider_set = context.read<Busline_provider>();
+    
     var itemsActionBar = [
       FloatingActionButton(
         shape: const CircleBorder(),

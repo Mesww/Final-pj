@@ -21,7 +21,6 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  late GoogleSignIn googleSignIn;
   late SharedPreferences prefs;
 
   void initSharedPref() async {
@@ -33,14 +32,6 @@ class _LoginViewState extends State<LoginView> {
     // TODO: implement initState
     super.initState();
     initSharedPref();
-    googleSignIn = GoogleSignIn(
-      scopes: ['email'],
-      clientId: kIsWeb || Platform.isAndroid
-          ? null
-          : Platform.isIOS || Platform.isMacOS
-              ? Constants.iosgoogleclientid
-              : null,
-    );
   }
 
   @override
@@ -79,6 +70,25 @@ class _LoginViewState extends State<LoginView> {
                 // !submit button
                 GestureDetector(
                   onTap: () async {
+                    GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
+                    // googleSignIn = GoogleSignIn(
+                    //   scopes: ['email'],
+                    //   clientId: kIsWeb || Platform.isAndroid
+                    //       ? null
+                    //       : Platform.isIOS || Platform.isMacOS
+                    //           ? Constants.iosgoogleclientid
+                    //           : null,
+                    // );
+
+                    if (Platform.isIOS || Platform.isMacOS) {
+                      googleSignIn = GoogleSignIn(scopes: ['email'],clientId: Constants.iosgoogleclientid,serverClientId: Constants.servergoogleclientid);
+                    }
+
+                    if ( kIsWeb || Platform.isAndroid) {
+                       googleSignIn = GoogleSignIn(scopes: ['email'],clientId: Constants.androidgoogleclientid,serverClientId: Constants.servergoogleclientid);
+                    }
+
+
                     AuthService auth = AuthService();
                     auth.handleSignIn(googleSignIn, context, prefs);
 

@@ -44,7 +44,7 @@ class AuthService {
     }
   }
 
-    Map<String, dynamic> decodeJWT(String token) {
+  Map<String, dynamic> decodeJWT(String token) {
     final parts = token.split('.');
     if (parts.length != 3) {
       throw Exception('Invalid token');
