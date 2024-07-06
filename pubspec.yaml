@@ -54,7 +54,7 @@ dependencies:
   flutter_polyline_points: ^2.0.0
   google_sign_in: ^6.2.1
   jwt_decoder: ^2.0.1
-  permission_handler: ^11.3.0
+  permission_handler: ^11.3.1
   web_socket_channel: ^3.0.0
 
 dev_dependencies:
