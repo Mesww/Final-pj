@@ -29,7 +29,7 @@ void main() async {
       ChangeNotifierProvider(create: (_) => usersProvider()),
       ChangeNotifierProvider(create: (_) => ChangeRoute()),
       ChangeNotifierProvider(create: (_) => actiivity_provider()),
-      ChangeNotifierProvider(create: (_) => busLocation()),
+      ChangeNotifierProvider(create: (_) => BusLocation()),
     ],
     child: MyApp(token: prefs.getString('token')),
   ));

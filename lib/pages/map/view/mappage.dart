@@ -67,41 +67,57 @@ class _MappageState extends State<Mappage> {
 
 // ดึง API รถเจม ============================================================
   List<Marker> BusMarker = [];
-  List<Bus> buses = [];
+List<Bus> buses = [];
 
-  void loadBus() async {
-    try {
-      final newBuses =
-          await Provider.of<busLocation>(context, listen: false).fetchBus();
-      final newMarkers = newBuses.map((bus) {
-        final latLngParts = bus.position!.split(",");
-        final busLat = double.parse(latLngParts[0]);
-        final busLng = double.parse(latLngParts[1]);
-        return Marker(
-            markerId: MarkerId('bus_${bus.id}'),
-            position: LatLng(busLat, busLng),
-            infoWindow: InfoWindow(title: 'Bus ${bus.id}',
-            snippet: 'Servertime: ${bus.serverTime}'),
-            icon: busMarkerIcon);
-      }).toList();
-
-      setState(() {
-        buses = newBuses; // Update bus data
-        BusMarker.clear();
-        BusMarker.addAll(newMarkers);
-      });
-    } catch (error) {
-      print('Error fetching buses: $error');
-    }
+void loadBus() {
+  final busLocation = Provider.of<BusLocation>(context, listen: false);
+  
+  if (!busLocation.isConnected) {
+    busLocation.connectToWebSocket();
   }
 
+  // Remove any existing listeners to avoid duplicates
+  busLocation.removeListener(_updateBusMarkers);
+  
+  // Add the listener
+  busLocation.addListener(_updateBusMarkers);
+}
 
-  Timer? _timer;
+void _updateBusMarkers() {
+  if (!mounted) return;  // Check if the widget is still in the tree
+
+  final busLocation = Provider.of<BusLocation>(context, listen: false);
+  final newBuses = busLocation.buses;
+  final newMarkers = newBuses.map((bus) {
+    final latLngParts = bus.position!.split(",");
+    final busLat = double.parse(latLngParts[0]);
+    final busLng = double.parse(latLngParts[1]);
+    return Marker(
+      markerId: MarkerId('bus_${bus.id}'),
+      position: LatLng(busLat, busLng),
+      infoWindow: InfoWindow(
+        title: 'Bus ${bus.id}',
+        snippet: 'Server time: ${bus.serverTime}'
+      ),
+      icon: busMarkerIcon
+    );
+  }).toList();
+
+  setState(() {
+    buses = newBuses;
+    BusMarker.clear();
+    BusMarker.addAll(newMarkers);
+  });
+}
+
+
+  // Timer? _timer;
   @override
   void initState() {
     super.initState();
-    loadBus();
-    Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
+    
+    loadBus(); // loadbus markers
+    // Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
@@ -122,9 +138,11 @@ class _MappageState extends State<Mappage> {
 
   @override
   void dispose() {
+    final busLocation = Provider.of<BusLocation>(context, listen: false);
+    busLocation.removeListener(_updateBusMarkers);
     super.dispose();
     _positionStream?.cancel();
-    _timer?.cancel(); // Cancel the stream subscription
+    // _timer?.cancel(); // Cancel the stream subscription
   }
 
   void initSharedPref() async {
@@ -149,10 +167,6 @@ class _MappageState extends State<Mappage> {
     );
   }
 
-
-
-
-  
   // ดึง Location ของ User
   void _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -214,7 +228,7 @@ class _MappageState extends State<Mappage> {
     // ...
   }
 
- // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
+  // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
     double distance = _calculateDistance(_findClosestMarker(_markers).position);
     double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
@@ -224,30 +238,30 @@ class _MappageState extends State<Mappage> {
   }
 
   //คำนวนเวลา
-String _getTimeText(List<Marker> _markers) {
-  Marker closestMarker = _findClosestMarker(_markers);
-  double distanceInMeters = _calculateDistance(closestMarker.position);
-  double speedKmPerHour = 40.0;
-  
-  double distanceInKm = distanceInMeters / 1000;
-  double timeInHours = distanceInKm / speedKmPerHour;
-  
-  // คำนวณเวลาเป็นวินาที
-  int totalSeconds = (timeInHours * 3600).round();
-  
-  // แยกเป็นนาทีและวินาที
-  int minutes = totalSeconds ~/ 60;
-  int seconds = totalSeconds % 60;
-  
-  String distanceTimeText;
-  if (minutes > 0) {
-    distanceTimeText = 'จะถึงป้ายในอีก $minutes นาที $seconds วินาที';
-  } else {
-    distanceTimeText = 'จะถึงป้ายในอีก $seconds วินาที';
+  String _getTimeText(List<Marker> _markers) {
+    Marker closestMarker = _findClosestMarker(_markers);
+    double distanceInMeters = _calculateDistance(closestMarker.position);
+    double speedKmPerHour = 40.0;
+
+    double distanceInKm = distanceInMeters / 1000;
+    double timeInHours = distanceInKm / speedKmPerHour;
+
+    // คำนวณเวลาเป็นวินาที
+    int totalSeconds = (timeInHours * 3600).round();
+
+    // แยกเป็นนาทีและวินาที
+    int minutes = totalSeconds ~/ 60;
+    int seconds = totalSeconds % 60;
+
+    String distanceTimeText;
+    if (minutes > 0) {
+      distanceTimeText = 'จะถึงป้ายในอีก $minutes นาที $seconds วินาที';
+    } else {
+      distanceTimeText = 'จะถึงป้ายในอีก $seconds วินาที';
+    }
+
+    return distanceTimeText;
   }
-  
-  return distanceTimeText;
-}
 
   // เซ็ต camera ไปที่ location ของ user
   void _goToMyLocation() async {
@@ -283,21 +297,18 @@ String _getTimeText(List<Marker> _markers) {
 
 // Permission
   Future<LocationPermission> _requestLocationPermission() async {
-
     LocationPermission permission = await Geolocator.checkPermission();
 
-    if (permission == LocationPermission.denied ) {
+    if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
 
     return permission;
   }
 
-
   // check Permission ===========================
   Future<void> checkPermission(
       Permission permission, BuildContext context) async {
-  
     showAlertDialog(context) => showCupertinoDialog<void>(
           context: context,
           barrierDismissible: false,
@@ -320,8 +331,8 @@ String _getTimeText(List<Marker> _markers) {
     final status = await permission.request();
     if (status.isGranted) {
     } else {
-        if (Platform.isAndroid) {
-      showAlertDialog(context);
+      if (Platform.isAndroid) {
+        showAlertDialog(context);
       }
       print('Exception occured!');
     }
@@ -338,7 +349,7 @@ String _getTimeText(List<Marker> _markers) {
           infoWindow: const InfoWindow(title: '1'),
           icon: customMarkerIcon,
           onTap: () {
-            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);                                                                                
+            selectedMarker = LatLng(20.05884362541219, 99.89840388818074);
             _zoomInMaker(selectedMarker);
           }),
       Marker(
@@ -460,7 +471,7 @@ String _getTimeText(List<Marker> _markers) {
     // String selectedRoute = Provider.of<ChangeRoute>(context).route;
     var busline_provider_get = context.watch<Busline_provider>();
     var busline_provider_set = context.read<Busline_provider>();
-    
+
     var itemsActionBar = [
       FloatingActionButton(
         shape: const CircleBorder(),
@@ -623,7 +634,6 @@ String _getTimeText(List<Marker> _markers) {
             icon: Icon(Icons.car_crash_rounded), // เปลี่ยนไอคอนที่นี่
           ),
         ),
-
         Positioned(
           top: 100.0,
           right: 20.0,
@@ -692,7 +702,8 @@ String _getTimeText(List<Marker> _markers) {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-    void _toggleVisibility() {
+
+  void _toggleVisibility() {
     setState(() {
       _isShow; // เปลี่ยนค่า _isShow เพื่อแสดงหรือซ่อน Bottom Sheet
     });
