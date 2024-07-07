@@ -33,6 +33,11 @@ class _LoginViewState extends State<LoginView> {
     super.initState();
     initSharedPref();
   }
+   @override
+  void dispose() {
+    // Dispose resources if needed
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,20 +76,13 @@ class _LoginViewState extends State<LoginView> {
                 GestureDetector(
                   onTap: () async {
                     GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
-                    // googleSignIn = GoogleSignIn(
-                    //   scopes: ['email'],
-                    //   clientId: kIsWeb || Platform.isAndroid
-                    //       ? null
-                    //       : Platform.isIOS || Platform.isMacOS
-                    //           ? Constants.iosgoogleclientid
-                    //           : null,
-                    // );
+              
 
                     if (Platform.isIOS || Platform.isMacOS) {
                       googleSignIn = GoogleSignIn(scopes: ['email'],clientId: Constants.iosgoogleclientid,serverClientId: Constants.servergoogleclientid);
                     }
 
-                    if ( kIsWeb || Platform.isAndroid) {
+                    else if ( kIsWeb || Platform.isAndroid) {
                        googleSignIn = GoogleSignIn(scopes: ['email'],clientId: Constants.androidgoogleclientid,serverClientId: Constants.servergoogleclientid);
                     }
 

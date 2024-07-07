@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:final_pj/pages/map/widgets/const.dart';
 import 'package:final_pj/pages/map/widgets/fab_circular_menu.dart';
 import 'package:final_pj/provider/busLocation.dart';
@@ -282,10 +283,13 @@ String _getTimeText(List<Marker> _markers) {
 
 // Permission
   Future<LocationPermission> _requestLocationPermission() async {
+
     LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+
+    if (permission == LocationPermission.denied ) {
       permission = await Geolocator.requestPermission();
     }
+
     return permission;
   }
 
@@ -293,6 +297,7 @@ String _getTimeText(List<Marker> _markers) {
   // check Permission ===========================
   Future<void> checkPermission(
       Permission permission, BuildContext context) async {
+  
     showAlertDialog(context) => showCupertinoDialog<void>(
           context: context,
           barrierDismissible: false,
@@ -315,7 +320,9 @@ String _getTimeText(List<Marker> _markers) {
     final status = await permission.request();
     if (status.isGranted) {
     } else {
+        if (Platform.isAndroid) {
       showAlertDialog(context);
+      }
       print('Exception occured!');
     }
   }
