@@ -48,12 +48,12 @@ class _MappageState extends State<Mappage> {
   Polyline _polylineR1 = const Polyline(polylineId: PolylineId("polylineR1"));
   // Route 2
   Polyline _polylineR2 = const Polyline(polylineId: PolylineId("polylineR2"));
-
   Polyline _polylineR0 = const Polyline(polylineId: PolylineId("polylineR0"));
 
   BitmapDescriptor customMarkerIcon = BitmapDescriptor.defaultMarker;
   BitmapDescriptor busMarkerIcon = BitmapDescriptor.defaultMarker;
 
+// customMarker ======================
   void _loadcustomMarkerIcon() async {
     customMarkerIcon = await BitmapDescriptor.fromAssetImage(
       ImageConfiguration(),
@@ -65,67 +65,55 @@ class _MappageState extends State<Mappage> {
     );
   }
 
+
 // ดึง API รถเจม ============================================================
   List<Marker> BusMarker = [];
-List<Bus> buses = [];
-
-void loadBus() {
-  final busLocation = Provider.of<BusLocation>(context, listen: false);
-  
-  if (!busLocation.isConnected) {
-    busLocation.connectToWebSocket();
+  List<Bus> buses = [];
+  void loadBus() {
+    final busLocation = Provider.of<BusLocation>(context, listen: false);
+    if (!busLocation.isConnected) {
+      busLocation.connectToWebSocket();
+    }
+    // Remove any existing listeners to avoid duplicates
+    busLocation.removeListener(_updateBusMarkers);
+    // Add the listener
+    busLocation.addListener(_updateBusMarkers);
   }
+  void _updateBusMarkers() {
+    if (!mounted) return; // Check if the widget is still in the tree
+    final busLocation = Provider.of<BusLocation>(context, listen: false);
+    final newBuses = busLocation.buses;
+    final newMarkers = newBuses.map((bus) {
+      final latLngParts = bus.position!.split(",");
+      final busLat = double.parse(latLngParts[0]);
+      final busLng = double.parse(latLngParts[1]);
+      return Marker(
+          markerId: MarkerId('bus_${bus.id}'),
+          position: LatLng(busLat, busLng),
+          infoWindow: InfoWindow(
+              title: 'Bus ${bus.id}',
+              snippet: 'Server time: ${bus.serverTime}'),
+          icon: busMarkerIcon);
+    }).toList();
 
-  // Remove any existing listeners to avoid duplicates
-  busLocation.removeListener(_updateBusMarkers);
-  
-  // Add the listener
-  busLocation.addListener(_updateBusMarkers);
-}
-
-void _updateBusMarkers() {
-  if (!mounted) return;  // Check if the widget is still in the tree
-
-  final busLocation = Provider.of<BusLocation>(context, listen: false);
-  final newBuses = busLocation.buses;
-  final newMarkers = newBuses.map((bus) {
-    final latLngParts = bus.position!.split(",");
-    final busLat = double.parse(latLngParts[0]);
-    final busLng = double.parse(latLngParts[1]);
-    return Marker(
-      markerId: MarkerId('bus_${bus.id}'),
-      position: LatLng(busLat, busLng),
-      infoWindow: InfoWindow(
-        title: 'Bus ${bus.id}',
-        snippet: 'Server time: ${bus.serverTime}'
-      ),
-      icon: busMarkerIcon
-    );
-  }).toList();
-
-  setState(() {
-    buses = newBuses;
-    BusMarker.clear();
-    BusMarker.addAll(newMarkers);
-  });
-}
-
-
-  // Timer? _timer;
+    setState(() {
+      buses = newBuses;
+      BusMarker.clear();
+      BusMarker.addAll(newMarkers);
+    });
+  }
+//=========================================================================
+ 
   @override
   void initState() {
     super.initState();
-    
     loadBus(); // loadbus markers
-    // Timer.periodic(Duration(seconds: 5), (Timer t) => loadBus());
     _setPolylinePoints();
     _requestLocationPermission();
     _getUserLocation();
     _loadcustomMarkerIcon();
-
     // set share token
     initSharedPref();
-
     checkPermission(Permission.location, context);
     // distace display realtime
     _positionStream = Geolocator.getPositionStream().listen((position) {
@@ -154,6 +142,7 @@ void _updateBusMarkers() {
     print(decodedToken);
   }
 
+
   //ลากเส้นทาง
   void _setPolylinePoints() {
     //Import form const.dart
@@ -167,7 +156,7 @@ void _updateBusMarkers() {
     );
   }
 
-  // ดึง Location ของ User
+  // ดึง Location ของ User ==========================================================
   void _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -175,13 +164,15 @@ void _updateBusMarkers() {
       _userLocation = LatLng(position.latitude, position.longitude);
     });
   }
+//  ==========================================================
 
   //คำนวณระยะทางระหว่าง Location ของ User กับ Markers
   double _calculateDistance(LatLng markerLatLng) {
     return Geolocator.distanceBetween(_userLocation.latitude,
         _userLocation.longitude, markerLatLng.latitude, markerLatLng.longitude);
   }
-
+  //  ==========================================================
+  
   //หา Marker ที่อยู่ใกล้ Location ของ User มากที่สุด
   Marker closestMarker = const Marker(
     markerId: MarkerId('default'),
@@ -199,25 +190,10 @@ void _updateBusMarkers() {
     }
     return closestMarker;
   }
+//  ==========================================================
 
-  // set activity ไป database ======================================================================================================
-  setAllActivity() {
-    DateTime now = DateTime.now();
-    // var user = Provider.of<UserProvider>(context, listen: false);
-    // const std_id = '123';
-    final setActivity = context.read<actiivity_provider>();
 
-    // use token intead of studentid
-    setActivity.set_studentId_act(decodedToken['id']);
-    setActivity.set_marker_act('${closestMarker.infoWindow.title}');
-    setActivity.set_location_act("${closestMarker.position}");
-    setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
-    setActivity.set_time_act("${now}");
-    print(now);
-  }
-//  ====================================================================================================================================
-
-// แสดงผล Marker ที่อยู่ใกล้ Location ของ User
+  // แสดงผล Marker ที่อยู่ใกล้ Location ของ User 
   void _showClosestMarker(_markers) {
     _findClosestMarker(_markers);
     _getUserLocation();
@@ -227,6 +203,7 @@ void _updateBusMarkers() {
     // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
     // ...
   }
+  //  ==========================================================
 
   // คำนวณระยะทางระหว่าง Location ของ User กับ Marker ที่อยู่ใกล้ที่สุด
   String _getDistanceText(_markers) {
@@ -236,13 +213,14 @@ void _updateBusMarkers() {
         'คุณห่างจากป้าย ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
     return distanceText;
   }
+  //  ==========================================================
 
-  //คำนวนเวลา
+
+  //คำนวนเวลา  ==========================================================
   String _getTimeText(List<Marker> _markers) {
     Marker closestMarker = _findClosestMarker(_markers);
     double distanceInMeters = _calculateDistance(closestMarker.position);
-    double speedKmPerHour = 40.0;
-
+    double speedKmPerHour = 4.3;
     double distanceInKm = distanceInMeters / 1000;
     double timeInHours = distanceInKm / speedKmPerHour;
 
@@ -262,6 +240,32 @@ void _updateBusMarkers() {
 
     return distanceTimeText;
   }
+//  ==========================================================
+
+
+
+
+
+
+
+  // set activity ไป database ======================================================================================================
+  setAllActivity() {
+    DateTime now = DateTime.now();
+    // var user = Provider.of<UserProvider>(context, listen: false);
+    // const std_id = '123';
+    final setActivity = context.read<actiivity_provider>();
+
+    // use token intead of studentid
+    setActivity.set_studentId_act(decodedToken['id']);
+    setActivity.set_marker_act('${closestMarker.infoWindow.title}');
+    setActivity.set_location_act("${closestMarker.position}");
+    setActivity.set_date_act("${now.year}/${now.month}/${now.day}");
+    setActivity.set_time_act("${now}");
+    print(now);
+  }
+//  ====================================================================================================================================
+
+
 
   // เซ็ต camera ไปที่ location ของ user
   void _goToMyLocation() async {
@@ -295,7 +299,7 @@ void _updateBusMarkers() {
     )); // Increase zoom by 1
   }
 
-// Permission
+// Permission ==================================
   Future<LocationPermission> _requestLocationPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
 
@@ -337,6 +341,7 @@ void _updateBusMarkers() {
       print('Exception occured!');
     }
   }
+
 
   late List mark;
   @override
