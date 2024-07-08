@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class Bus {
   final int? id;
@@ -22,39 +22,62 @@ class Bus {
 
 const String bearerToken = 'k3wbpy57L4pVQC';
 
-class busLocation extends ChangeNotifier {
-  final httpClient = http.Client();
+class BusLocation extends ChangeNotifier {
+  List<Bus> _buses = [];
+  WebSocketChannel? _channel;
+  bool _isConnected = false;
 
-  Future<List<Bus>> fetchBus() async {
-    var url = Uri.parse('https://www.ppgps171.com/mobile/api/mfutransit');
+  List<Bus> get buses => _buses;
+  bool get isConnected => _isConnected;
 
-    final headers = {
-      'Authorization': 'Bearer $bearerToken',
-      'Content-Type': 'application/json',
-    };
+  void connectToWebSocket() {
+    if (_isConnected) return;
 
-    var response = await http.get(url, headers: headers);
+    final wsUrl = Uri.parse('wss://7a7b-58-10-0-103.ngrok-free.app');
+    _channel = WebSocketChannel.connect(wsUrl);
 
-    if (response.statusCode == 200) {
-      var jsonData = jsonDecode(response.body);
-      List<Bus> buses = [];
-      for (var key in jsonData['data'].keys) {
-        // Access data by key  (or any other key from the response)
-        final eachData = jsonData['data'][key];
-        final bus = Bus(
-          id: int.tryParse(key), // Attempt to convert key to int for id
-          direction: eachData['direction'],
-          speed: eachData['speed'],
-          serverTime: eachData['server_time'],
-          trackerTime: eachData['tracker_time'],
-          position: eachData['position'],
-        );
-        buses.add(bus);
-      }
+    _channel!.stream.listen(
+      (message) {
+        _handleMessage(message);
+      },
+      onError: (error) {
+        print('WebSocket error: $error');
+        _isConnected = false;
+        notifyListeners();
+      },
+      onDone: () {
+        print('WebSocket connection closed');
+        _isConnected = false;
+        notifyListeners();
+      },
+    );
 
-      return buses;
-    } else {
-      throw Exception('Failed to fetch bus data');
+    _isConnected = true;
+    notifyListeners();
+  }
+
+  void _handleMessage(String message) {
+    var jsonData = jsonDecode(message);
+    _buses.clear();
+    for (var key in jsonData['data'].keys) {
+      final eachData = jsonData['data'][key];
+      final bus = Bus(
+        id: int.tryParse(key),
+        direction: eachData['direction'],
+        speed: eachData['speed'],
+        serverTime: eachData['server_time'],
+        trackerTime: eachData['tracker_time'],
+        position: eachData['position'],
+      );
+      _buses.add(bus);
     }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _channel?.sink.close();
+    _isConnected = false;
+    super.dispose();
   }
 }
