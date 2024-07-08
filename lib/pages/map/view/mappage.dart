@@ -65,7 +65,6 @@ class _MappageState extends State<Mappage> {
     );
   }
 
-
 // ดึง API รถเจม ============================================================
   List<Marker> BusMarker = [];
   List<Bus> buses = [];
@@ -79,6 +78,7 @@ class _MappageState extends State<Mappage> {
     // Add the listener
     busLocation.addListener(_updateBusMarkers);
   }
+
   void _updateBusMarkers() {
     if (!mounted) return; // Check if the widget is still in the tree
     final busLocation = Provider.of<BusLocation>(context, listen: false);
@@ -103,7 +103,7 @@ class _MappageState extends State<Mappage> {
     });
   }
 //=========================================================================
- 
+
   @override
   void initState() {
     super.initState();
@@ -142,7 +142,6 @@ class _MappageState extends State<Mappage> {
     print(decodedToken);
   }
 
-
   //ลากเส้นทาง
   void _setPolylinePoints() {
     //Import form const.dart
@@ -172,7 +171,7 @@ class _MappageState extends State<Mappage> {
         _userLocation.longitude, markerLatLng.latitude, markerLatLng.longitude);
   }
   //  ==========================================================
-  
+
   //หา Marker ที่อยู่ใกล้ Location ของ User มากที่สุด
   Marker closestMarker = const Marker(
     markerId: MarkerId('default'),
@@ -192,8 +191,7 @@ class _MappageState extends State<Mappage> {
   }
 //  ==========================================================
 
-
-  // แสดงผล Marker ที่อยู่ใกล้ Location ของ User 
+  // แสดงผล Marker ที่อยู่ใกล้ Location ของ User
   void _showClosestMarker(_markers) {
     _findClosestMarker(_markers);
     _getUserLocation();
@@ -213,8 +211,19 @@ class _MappageState extends State<Mappage> {
         'คุณห่างจากป้าย ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
     return distanceText;
   }
-  //  ==========================================================
 
+
+   // คำนวณระยะทางระหว่าง Location ของ User กับ Bus ที่อยู่ใกล้ที่สุด
+  String _getDistanceTextBusUser(BusMarker) {
+    double distance =
+        _calculateDistance(_findClosestMarker(BusMarker).position);
+    double distanceInKilometers = distance / 1000; // แปลงเมตรเป็นกิโลเมตร
+    String distanceBusUser =
+        'คุณห่างจากรถ ${closestMarker.infoWindow.title} เป็นระยะทาง ${distanceInKilometers.toStringAsFixed(1)} กิโลเมตร.';
+    return distanceBusUser;
+  }
+
+  //  ==========================================================
 
   //คำนวนเวลา  ==========================================================
   String _getTimeText(List<Marker> _markers) {
@@ -242,12 +251,6 @@ class _MappageState extends State<Mappage> {
   }
 //  ==========================================================
 
-
-
-
-
-
-
   // set activity ไป database ======================================================================================================
   setAllActivity() {
     DateTime now = DateTime.now();
@@ -264,8 +267,6 @@ class _MappageState extends State<Mappage> {
     print(now);
   }
 //  ====================================================================================================================================
-
-
 
   // เซ็ต camera ไปที่ location ของ user
   void _goToMyLocation() async {
@@ -341,7 +342,6 @@ class _MappageState extends State<Mappage> {
       print('Exception occured!');
     }
   }
-
 
   late List mark;
   @override
@@ -619,6 +619,13 @@ class _MappageState extends State<Mappage> {
                           const SizedBox(height: 5),
                           Text(
                             _getTimeText(_markers),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                           Text(
+                            _getDistanceTextBusUser(BusMarker),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
